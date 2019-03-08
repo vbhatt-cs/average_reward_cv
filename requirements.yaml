@@ -1,0 +1,8 @@
+name: average_reward_cv
+dependencies:
+  - python=3.6
+  - numpy=1.16.2
+  - gym=0.12.0
+  - matplotlib=3.0.3
+  - pip:
+    - mlflow=0.8.2
