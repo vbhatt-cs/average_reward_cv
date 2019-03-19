@@ -24,19 +24,41 @@ Extension of De Asis, Kristopher, and Richard S. Sutton. "Per-decision Multi-ste
 * _main.py_ - Main script to run the experiments
 * _gridworld.py_ - Class for grid world environment
 * _algs.py_ - Implementation of algorithms
+* _features.py_ - Feature extraction classes
+* _policies.py_ - Implementation of policies
+* _tiles3.py_ - Tile Coding Software by Rich Sutton (http://incompleteideas.net/tiles/tiles3.html)
 
 ## TODO
 - [x] Implement and test environments
-- [ ] Implement algorithms for episodic case and verify
-    - [ ] Scaling TD
-    - [ ] Scaling target
-    - [ ] Per decision
-    - [ ] ACV
 - [ ] Implement algorithms for continuing case
-    - [ ] Scaling TD
-    - [ ] Scaling target
-    - [ ] Per decision
-    - [ ] ACV for Q only
-    - [ ] ACV for Q, R
+    - [x] On policy
+        - [x] N-step prediction
+        - [x] Lambda prediction
+        - [x] N-step control
+        - [x] Lambda control
+    - [x] One-step/full Rbar update
+    - [ ] R-Learning
+    - [ ] Off policy
+        - [ ] N-step prediction
+        - [ ] Lambda prediction
+        - [ ] N-step control
+        - [ ] Lambda control
+    - [ ] CV
 - [ ] Integrate MLFlow for running experiments
 - [ ] Plot graphs
+    - [ ] Prediction (on-policy)
+        - [ ] RMS Error with n-step
+        - [ ] RMS Error with lambda
+        - [ ] RMS Error with full rbar or one step rbar
+    - [ ] Prediction (off-policy)
+        - [ ] RMS Error with n-step
+        - [ ] RMS Error with lambda
+        - [ ] RMS Error with full rbar or one step rbar
+    - [ ] Prediction (cv)
+        - [ ] RMS Error with n-step
+        - [ ] RMS Error with lambda
+        - [ ] RMS Error with full rbar or one step rbar
+        - [ ] RMS Error without cv for rbar    
+    - [ ] Control
+        - [ ] Reward vs episodes for cv and no cv
+        - [ ] Fully off-policy (like random behaviour, test with greedy?)

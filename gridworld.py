@@ -51,6 +51,14 @@ class GridWorld:
         plt.draw()
 
     def step(self, action):
+        """
+        Advance the environment by one step
+        Args:
+            action (int): Action to take
+
+        Returns:
+            next state, reward, if the episode is done, None
+        """
         x, y = self.state
 
         if action == 0:  # North
@@ -68,6 +76,7 @@ class GridWorld:
         if self.state in self.goal_states:
             reward = 0
             done = True
+            self.state = (2, 2)  # Since in continuing case env is reset and it doesn't matter in episodic case
         else:
             reward = -1
             done = False
@@ -76,6 +85,9 @@ class GridWorld:
 
 
 def test_gridworld():
+    """
+    Testing if gridworld dynamics are correct
+    """
     env = GridWorld()
 
     assert env.size == 5
@@ -85,6 +97,7 @@ def test_gridworld():
     obs = env.reset()
     assert obs == env.state == true_state
 
+    # Test actions
     acts = [0, 1, 2, 3]
     true_states = [(1, 2), (1, 3), (2, 3), (2, 2)]
 
@@ -94,6 +107,7 @@ def test_gridworld():
         assert reward == -1
         assert not done
 
+    # Test goal states, transitions on edges
     env.reset()
     acts = [2, 2, 2, 0, 0, 0, 0, 0, 2, 2, 1, 1, 1, 3, 3, 3, 3, 3, 0]
     for act in acts:
@@ -102,7 +116,7 @@ def test_gridworld():
         assert not done
 
     obs, reward, done, _ = env.step(0)
-    assert obs == env.state == (0, 0)
+    assert obs == env.state == (2, 2)
     assert reward == 0
     assert done
 
@@ -110,7 +124,7 @@ def test_gridworld():
     acts = [2, 2, 1, 1]
     for act in acts:
         obs, reward, done, _ = env.step(act)
-    assert obs == env.state == (4, 4)
+    assert obs == env.state == (2, 2)
     assert reward == 0
     assert done
 
