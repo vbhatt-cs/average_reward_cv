@@ -68,11 +68,68 @@ class BaseAlg:
 
 
 class RLearning:
-    def __init__(self, state_size):
-        pass
+    """
+    R-Learning algorithm as given in Schwartz, Anton. "A reinforcement learning method for maximizing undiscounted
+    rewards." Proceedings of the tenth international conference on machine learning. Vol. 298. 1993.
+    """
+    def __init__(self, behaviour_policy, alpha, beta, state_size, action_size):
+        """
+        Args:
+            behaviour_policy (function): Policy to follow to generate experience. Should take state, weights as args
+            alpha (float): Learning rate for weights
+            beta (float): Learning rate for average reward
+            state_size (int): Length of state feature vector
+            action_size (int): Size of action space
+        """
+        self.behaviour_policy = behaviour_policy
+        self.alpha = alpha
+        self.beta = beta
+        self.weights = np.zeros((state_size, action_size))
+        self.rbar = 0
+
+        self.state = None
+        self.action = None
+
+    def act(self, state):
+        """
+        Takes one step using behaviour policy
+        Args:
+            state (1D array): Current state
+
+        Returns:
+            Action
+        """
+        self.action = self.behaviour_policy(state, self.weights)
+        return self.action
+
+    def reset(self, state):
+        """
+        Store initial state
+        Args:
+            state (1D array): Initial state
+
+        Returns:
+            None
+        """
+        self.state = state
 
     def train(self, reward, next_state):
-        raise NotImplementedError
+        """
+        Do R-Learning update
+        Args:
+            reward (float): Reward obtained in this step
+            next_state (1D array): Next state
+
+        Returns:
+            None
+        """
+        q = self.state.dot(self.weights)
+        next_q = next_state.dot(self.weights)
+        delta = reward - self.rbar + np.max(next_q) - q[self.action]
+        self.weights[:, self.action] += self.alpha * delta * self.state
+        if self.action == np.argmax(q):
+            self.rbar += self.beta * delta
+        self.state = next_state
 
 
 class NStepPrediction(BaseAlg):

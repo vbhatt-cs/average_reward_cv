@@ -37,7 +37,7 @@ Extension of De Asis, Kristopher, and Richard S. Sutton. "Per-decision Multi-ste
         - [x] N-step control
         - [x] Lambda control
     - [x] One-step/full Rbar update
-    - [ ] R-Learning
+    - [x] R-Learning
     - [ ] Off policy
         - [ ] N-step prediction
         - [ ] Lambda prediction

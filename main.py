@@ -77,7 +77,7 @@ def main():
     action_size = env.action_space.n
 
     if args.algorithm == 'r-learning':
-        alg = RLearning(state_size)
+        alg = RLearning(behaviour_policy, args.alpha, args.beta, state_size, action_size)
     elif args.algorithm == 'n-step':
         if args.environment == 'gridworld':  # Prediction
             alg = NStepPrediction(behaviour_policy, target_policy, args.alpha, args.beta, args.off_policy,
@@ -112,7 +112,7 @@ def main():
         # print("Episode: {}, Reward: {}, Actions: {} Rbar: {}".format(e, avg_reward,
         #                                                              alg.weights.argmax(axis=1).reshape((5, 5)),
         #                                                              alg.rbar))
-        # print("Episode: {}, Reward: {}, Rbar: {}".format(e, avg_reward, alg.rbar))
+        print("Episode: {}, Reward: {}, Rbar: {}".format(e, avg_reward, alg.rbar))
 
 
 if __name__ == '__main__':
