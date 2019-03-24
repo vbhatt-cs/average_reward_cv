@@ -374,8 +374,10 @@ class NStepControl(BaseAlg):
             None
         """
         self.s_history.append(state)
-        action = self.behaviour_policy.act(state, self.weights)
+        action, prob = self.behaviour_policy.act_prob(state, self.weights)
         self.a_history.append(action)
+        rho = self.target_policy.prob(state, action, self.weights) / prob
+        self.rho_history.append(rho)
 
     def act(self, state, test=False):
         """
@@ -418,7 +420,7 @@ class NStepControl(BaseAlg):
                 g = self.r_history[-i] - self.rbar + self.rho_history[-i] * g
                 expected_v = self.target_policy.expected_value(self.s_history[-i], self.weights)
                 g_cv = self.r_history[-i] - self.rbar + self.rho_history[-i] * (
-                        g - self.s_history[-i].dot(self.weights)[self.a_history[-i]]) + expected_v
+                        g_cv - self.s_history[-i].dot(self.weights)[self.a_history[-i]]) + expected_v
 
             delta_cv = g_cv - self.s_history[0].dot(self.weights)[self.a_history[0]]
             delta = g - self.s_history[0].dot(self.weights)[self.a_history[0]]
