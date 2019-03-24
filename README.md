@@ -30,7 +30,7 @@ Extension of De Asis, Kristopher, and Richard S. Sutton. "Per-decision Multi-ste
 
 ## TODO
 - [x] Implement and test environments
-- [ ] Implement algorithms for continuing case
+- [x] Implement algorithms for continuing case
     - [x] On policy
         - [x] N-step prediction
         - [x] Lambda prediction
@@ -38,12 +38,13 @@ Extension of De Asis, Kristopher, and Richard S. Sutton. "Per-decision Multi-ste
         - [x] Lambda control
     - [x] One-step/full Rbar update
     - [x] R-Learning
-    - [ ] Off policy
-        - [ ] N-step prediction
-        - [ ] Lambda prediction
-        - [ ] N-step control
-        - [ ] Lambda control
-    - [ ] CV
+    - [x] Off policy
+        - [x] N-step prediction
+        - [x] Lambda prediction
+        - [x] N-step control
+        - [x] Lambda control
+        - [x] Add a testing phase to test off-policy control
+    - [x] CV
 - [ ] Integrate MLFlow for running experiments
 - [ ] Plot graphs
     - [ ] Prediction (on-policy)

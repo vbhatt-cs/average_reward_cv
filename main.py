@@ -6,7 +6,7 @@ import numpy as np
 from algs import RLearning, NStepPrediction, NStepControl, LambdaPrediction, LambdaControl
 from features import TileCoding, OneHot
 from gridworld import GridWorld
-from policies import EpsGreedy, BiasedRandom, scripted_policy
+from policies import EpsGreedy, BiasedRandom, ScriptedPolicy
 
 
 def parse_args():
@@ -38,8 +38,8 @@ def parse_args():
                         help='True if learning is off-policy (default: True)')
     parser.add_argument('--cv', action='store_true', default=True,
                         help='True if control variates are used (for off-policy) (default: True)')
-    parser.add_argument('--full-rbar', action='store_true', default=True,
-                        help='True if Rbar also uses n-step/lambda updates (default: True)')
+    parser.add_argument('--full-rbar', action='store_true', default=False,
+                        help='True if Rbar also uses n-step/lambda updates (default: False)')
     parser.add_argument('--cv-rbar', action='store_true', default=True,
                         help='True if Rbar uses control variates (default: True)')
 
@@ -63,15 +63,15 @@ def main():
         args.alpha = args.alpha / 16
         args.beta = args.beta / 16
 
-        behaviour_policy = EpsGreedy(0.1, env.action_space.n, rng).act
-        target_policy = EpsGreedy(0, env.action_space.n, rng).act  # Greedy policy
+        behaviour_policy = EpsGreedy(0.1, env.action_space.n, rng)
+        target_policy = EpsGreedy(0, env.action_space.n, rng)  # Greedy policy
     else:  # Grid world
         env = GridWorld()
         features = OneHot(25)
-        behaviour_policy = EpsGreedy(0.1, env.action_space.n, rng).act  # Equiprobable random
-        target_policy = BiasedRandom(0.5, 0, env.action_space.n, rng).act
-        # behaviour_policy = scripted_policy
-        # target_policy = scripted_policy
+        behaviour_policy = EpsGreedy(1, env.action_space.n, rng)  # Equiprobable random
+        target_policy = BiasedRandom(0.5, 0, env.action_space.n, rng)
+        # behaviour_policy = ScriptedPolicy()
+        # target_policy = ScriptedPolicy()
 
     state_size = features.state_size
     action_size = env.action_space.n
@@ -107,6 +107,17 @@ def main():
             state = features.extract(obs)
             alg.train(reward, state)
             avg_reward += reward
+
+        # Testing
+        # avg_reward = 0
+        # obs = env.reset()
+        # state = features.extract(obs)
+        # done = False
+        # while not done:
+        #     action = alg.act(state, True)
+        #     obs, reward, done, _ = env.step(action)
+        #     state = features.extract(obs)
+        #     avg_reward += reward
 
         # print("Episode: {}, Weights: {}, Rbar: {}".format(e, alg.weights.reshape((5, 5)), alg.rbar))
         # print("Episode: {}, Reward: {}, Actions: {} Rbar: {}".format(e, avg_reward,

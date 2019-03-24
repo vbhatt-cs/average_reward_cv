@@ -5,7 +5,49 @@ All policies need to take state, weights as arguments. Use act method of classes
 import numpy as np
 
 
-class EpsGreedy:
+class BasePolicy:
+    """
+    Base class for policies
+    """
+    def act(self, state, weights):
+        """
+        To sample an action
+        Args:
+            state (1D array): Current state
+            weights (array): Current weights
+        """
+        raise NotImplementedError
+
+    def prob(self, state, action, weights):
+        """
+        To calculate probability of taking the given action
+        Args:
+            state (1D array): Current state
+            action (int): Action taken
+            weights (array): Current weights
+        """
+        raise NotImplementedError
+
+    def act_prob(self, state, weights):
+        """
+        Sample an action and calculate the probability of it
+        Args:
+            state (1D array): Current state
+            weights (array): Current weights
+        """
+        raise NotImplementedError
+
+    def expected_value(self, state, weights):
+        """
+        Calculate the expected Q value
+        Args:
+            state (1D array): Current state
+            weights (array): Current weights
+        """
+        raise NotImplementedError
+
+
+class EpsGreedy(BasePolicy):
     """
     Epsilon Greedy
     """
@@ -40,8 +82,61 @@ class EpsGreedy:
             q = state.dot(weights)
             return q.argmax()
 
+    def prob(self, state, action, weights):
+        """
+        Args:
+            state (1D array): Current state
+            action (int): Action taken
+            weights (array): Current weights
 
-class BiasedRandom:
+        Returns:
+            Probability of taking the action under the policy
+        """
+        if action == np.argmax(state.dot(weights)):
+            return 1 - self.eps + self.eps / self.action_size
+        else:
+            return self.eps / self.action_size
+
+    def act_prob(self, state, weights):
+        """
+        Sample an action and calculate the probability of it
+        Args:
+            state (1D array): Current state
+            weights (array): Current weights
+
+        Returns:
+            Action, probability
+        """
+        q = state.dot(weights)
+        best_action = q.argmax()
+        if self.rng.rand() < self.eps:
+            action = self.rng.randint(self.action_size)
+        else:
+            action = best_action
+
+        if action == best_action:
+            return action, 1 - self.eps + self.eps / self.action_size
+        else:
+            return action, self.eps / self.action_size
+
+    def expected_value(self, state, weights):
+        """
+        Calculate the expected Q value
+        Args:
+            state (1D array): Current state
+            weights (array): Current weights
+
+        Returns:
+            Expected Q value
+        """
+        q = state.dot(weights)
+        best_action = q.argmax()
+        probs = np.ones(self.action_size) * self.eps / self.action_size
+        probs[best_action] += 1 - self.eps
+        return probs.dot(q)
+
+
+class BiasedRandom(BasePolicy):
     """
     Take bias_action w.p (1-eps) and random action otherwise
     """
@@ -73,25 +168,109 @@ class BiasedRandom:
         else:
             return self.bias_action
 
+    def prob(self, state, action, weights):
+        """
+        Args:
+            state (1D array): Current state
+            action (int): Action taken
+            weights (array): Current weights
 
-def scripted_policy(state, weights):
-    """
-    A scripted policy specific to 5x5 gridworld for testing. Goes N, N, W, W from initial state.
-    Args:
-        state (1D array): Current state
-        weights: Just for syntax
+        Returns:
+            Probability of taking the action under the policy
+        """
+        if action == self.bias_action:
+            return 1 - self.eps + self.eps / self.action_size
+        else:
+            return self.eps / self.action_size
 
-    Returns:
-        Action
+    def act_prob(self, state, weights):
+        """
+        Sample an action and calculate the probability of it
+        Args:
+            state (1D array): Current state
+            weights (array): Current weights
+
+        Returns:
+            Action, probability
+        """
+        if self.rng.rand() < self.eps:
+            action = self.rng.randint(self.action_size)
+        else:
+            action = self.bias_action
+
+        if action == self.bias_action:
+            return action, 1 - self.eps + self.eps / self.action_size
+        else:
+            return action, self.eps / self.action_size
+
+    def expected_value(self, state, weights):
+        """
+        Calculate the expected Q value
+        Args:
+            state (1D array): Current state
+            weights (array): Current weights
+
+        Returns:
+            Expected Q value
+        """
+        q = state.dot(weights)
+        probs = np.ones(self.action_size) * self.eps / self.action_size
+        probs[self.bias_action] += 1 - self.eps
+        return probs.dot(q)
+
+
+class ScriptedPolicy(BasePolicy):
     """
-    if state[12] == 1:
-        return 0
-    elif state[7] == 1:
-        return 0
-    elif state[2] == 1:
-        return 3
-    elif state[1] == 1:
-        return 3
-    else:
-        raise ValueError
+    A scripted policy specific to 5x5 gridworld for testing. Optimal deterministic policy
+    """
+    def act(self, state, weights):
+        """
+        Calculate the action. Args are just for syntax
+        Returns:
+            Action
+        """
+        optimal_policy = np.array([0, 3, 3, 3, 3, 0, 0, 0, 0, 2, 0, 0, 0, 2, 2, 0, 2, 2, 2, 2, 1, 1, 1, 1, 0])
+        return int(optimal_policy[state.astype(np.bool)])
+
+    def prob(self, state, action, weights):
+        """
+        Args:
+            state (1D array): Current state
+            action (int): Action taken
+            weights (array): Current weights
+
+        Returns:
+            Probability of taking the action under the policy
+        """
+        scripted_action = self.act(state, weights)
+        if action == scripted_action:
+            return 1
+        else:
+            return 0
+
+    def act_prob(self, state, weights):
+        """
+        Sample an action and calculate the probability of it
+        Args:
+            state (1D array): Current state
+            weights (array): Current weights
+
+        Returns:
+            Action, probability
+        """
+        return self.act(state, weights), 1
+
+    def expected_value(self, state, weights):
+        """
+        Calculate the expected Q value
+        Args:
+            state (1D array): Current state
+            weights (array): Current weights
+
+        Returns:
+            Expected Q value
+        """
+        q = state.dot(weights)
+        action = self.act(state, weights)
+        return q[action]
 
