@@ -27,6 +27,7 @@ Extension of De Asis, Kristopher, and Richard S. Sutton. "Per-decision Multi-ste
 * _features.py_ - Feature extraction classes
 * _policies.py_ - Implementation of policies
 * _tiles3.py_ - Tile Coding Software by Rich Sutton (http://incompleteideas.net/tiles/tiles3.html)
+* _true_value.py_ - Code to calculate true value function in gridworld environment
 
 ## TODO
 - [x] Implement and test environments

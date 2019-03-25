@@ -46,6 +46,15 @@ class BasePolicy:
         """
         raise NotImplementedError
 
+    def probs(self, state, weights):
+        """
+        Calculate the probabilities of all actions
+        Args:
+            state (1D array): Current state
+            weights (array): Current weights
+        """
+        raise NotImplementedError
+
 
 class EpsGreedy(BasePolicy):
     """
@@ -130,10 +139,24 @@ class EpsGreedy(BasePolicy):
             Expected Q value
         """
         q = state.dot(weights)
+        probs = self.probs(state, weights)
+        return probs.dot(q)
+
+    def probs(self, state, weights):
+        """
+        Calculate the probabilities of all actions
+        Args:
+            state (1D array): Current state
+            weights (array): Current weights
+
+        Returns:
+            Action probabilities
+        """
+        q = state.dot(weights)
         best_action = q.argmax()
         probs = np.ones(self.action_size) * self.eps / self.action_size
         probs[best_action] += 1 - self.eps
-        return probs.dot(q)
+        return probs
 
 
 class BiasedRandom(BasePolicy):
@@ -214,9 +237,22 @@ class BiasedRandom(BasePolicy):
             Expected Q value
         """
         q = state.dot(weights)
+        probs = self.probs(state, weights)
+        return probs.dot(q)
+
+    def probs(self, state, weights):
+        """
+        Calculate the probabilities of all actions
+        Args:
+            state (1D array): Current state
+            weights (array): Current weights
+
+        Returns:
+            Action probabilities
+        """
         probs = np.ones(self.action_size) * self.eps / self.action_size
         probs[self.bias_action] += 1 - self.eps
-        return probs.dot(q)
+        return probs
 
 
 class ScriptedPolicy(BasePolicy):
@@ -273,4 +309,19 @@ class ScriptedPolicy(BasePolicy):
         q = state.dot(weights)
         action = self.act(state, weights)
         return q[action]
+
+    def probs(self, state, weights):
+        """
+        Calculate the probabilities of all actions
+        Args:
+            state (1D array): Current state
+            weights (array): Current weights
+
+        Returns:
+            Action probabilities
+        """
+        action = self.act(state, weights)
+        probs = np.zeros(4)
+        probs[action] = 1
+        return probs
 
