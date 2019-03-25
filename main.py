@@ -69,9 +69,11 @@ def main():
         env = GridWorld()
         features = OneHot(25)
         behaviour_policy = EpsGreedy(1, env.action_space.n, rng)  # Equiprobable random
+        # behaviour_policy = BiasedRandom(0.5, 0, env.action_space.n, rng)
         target_policy = BiasedRandom(0.5, 0, env.action_space.n, rng)
         # behaviour_policy = ScriptedPolicy()
         # target_policy = ScriptedPolicy()
+        # target_policy = EpsGreedy(0, env.action_space.n, rng)  # Greedy policy
 
     state_size = features.state_size
     action_size = env.action_space.n
@@ -82,6 +84,8 @@ def main():
         if args.environment == 'gridworld':  # Prediction
             alg = NStepPrediction(behaviour_policy, target_policy, args.alpha, args.beta, args.off_policy,
                                   args.cv, args.full_rbar, args.cv_rbar, args.n, state_size)
+            # alg = NStepControl(behaviour_policy, target_policy, args.alpha, args.beta, args.off_policy,
+            #                    args.cv, args.full_rbar, args.cv_rbar, args.n, state_size, action_size)
         else:  # Control
             alg = NStepControl(behaviour_policy, target_policy, args.alpha, args.beta, args.off_policy,
                                args.cv, args.full_rbar, args.cv_rbar, args.n, state_size, action_size)
@@ -89,6 +93,8 @@ def main():
         if args.environment == 'gridworld':  # Prediction
             alg = LambdaPrediction(behaviour_policy, target_policy, args.alpha, args.beta, args.off_policy,
                                    args.cv, args.full_rbar, args.cv_rbar, args.lam, state_size)
+            # alg = LambdaControl(behaviour_policy, target_policy, args.alpha, args.beta, args.off_policy,
+            #                     args.cv, args.full_rbar, args.cv_rbar, args.lam, state_size, action_size)
         else:  # Control
             alg = LambdaControl(behaviour_policy, target_policy, args.alpha, args.beta, args.off_policy,
                                 args.cv, args.full_rbar, args.cv_rbar, args.lam, state_size, action_size)
@@ -100,30 +106,37 @@ def main():
             alg.reset(state)
         done = False
         avg_reward = 0
+        # action_count = np.zeros(action_size)
         while not done:
             # env.render()
             action = alg.act(state)
+            # action_count[action] += 1
             obs, reward, done, _ = env.step(action)
             state = features.extract(obs)
             alg.train(reward, state)
             avg_reward += reward
 
-        # Testing
-        # avg_reward = 0
+        # # print(action_count / sum(action_count))
+        # print(avg_reward)
+        #
+        # # Testing
+        # # avg_reward = 0
+        # # action_count = np.zeros(action_size)
         # obs = env.reset()
         # state = features.extract(obs)
         # done = False
         # while not done:
         #     action = alg.act(state, True)
+        #     # action_count[action] += 1
         #     obs, reward, done, _ = env.step(action)
         #     state = features.extract(obs)
-        #     avg_reward += reward
+        #     avg_reward -= reward
 
-        # print("Episode: {}, Weights: {}, Rbar: {}".format(e, alg.weights.reshape((5, 5)), alg.rbar))
+        print("Episode: {}, Weights: {}, Rbar: {}".format(e, alg.weights.reshape((5, 5)), alg.rbar))
         # print("Episode: {}, Reward: {}, Actions: {} Rbar: {}".format(e, avg_reward,
         #                                                              alg.weights.argmax(axis=1).reshape((5, 5)),
         #                                                              alg.rbar))
-        print("Episode: {}, Reward: {}, Rbar: {}".format(e, avg_reward, alg.rbar))
+        # print("Episode: {}, Reward: {}, Rbar: {}".format(e, avg_reward, alg.rbar))
 
 
 if __name__ == '__main__':

@@ -404,7 +404,6 @@ class NStepControl(BaseAlg):
         Returns:
             None
         """
-        # TODO: Check CV, off-policy
         self.r_history.append(reward)
         self.s_history.append(next_state)
         next_action, prob = self.behaviour_policy.act_prob(next_state, self.weights)

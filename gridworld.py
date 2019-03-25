@@ -15,6 +15,7 @@ class GridWorld:
         self.prev_state = self.state  # For efficient rendering
         self.goal_states = [(0, 0), (self.size - 1, self.size - 1)]  # Terminal states
         self.action_space = Discrete(4)
+        self.t = 0
 
         # Rendering init
         fig, ax = plt.subplots()
@@ -38,6 +39,7 @@ class GridWorld:
             Starting state
         """
         self.state = (2, 2)  # Start at the center of the grid
+        self.t = 0
         return self.state
 
     def render(self):
@@ -80,6 +82,12 @@ class GridWorld:
         else:
             reward = -1
             done = False
+
+        self.t += 1
+        if self.t == 1000:
+            reward = -1
+            done = True
+            self.state = (2, 2)  # Since in continuing case env is reset and it doesn't matter in episodic case
 
         return self.state, reward, done, None  # No info returned (kept to make it consistent with gym)
 
