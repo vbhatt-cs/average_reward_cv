@@ -12,7 +12,7 @@ from policies import EpsGreedy, BiasedRandom, ScriptedPolicy
 def parse_args():
     # Training settings
     parser = argparse.ArgumentParser(description='Control variates for average reward')
-    parser.add_argument('--max-episodes', type=int, default=200, metavar='N',
+    parser.add_argument('--max-episodes', type=int, default=1000, metavar='N',
                         help='number of episodes to repeat (default: 200)')
     parser.add_argument('--environment', type=str, default='gridworld', metavar='E',
                         choices=['gridworld', 'mountain_car'],
@@ -50,6 +50,7 @@ def parse_args():
 
 def main():
     args = parse_args()
+    print(args.full_rbar)
     rng = np.random.RandomState(args.seed)
     # np.seterr(all='raise')
 
@@ -68,12 +69,22 @@ def main():
     else:  # Grid world
         env = GridWorld()
         features = OneHot(25)
-        behaviour_policy = EpsGreedy(1, env.action_space.n, rng)  # Equiprobable random
-        # behaviour_policy = BiasedRandom(0.5, 0, env.action_space.n, rng)
+        if args.off_policy:
+            behaviour_policy = EpsGreedy(1, env.action_space.n, rng)  # Equiprobable random
+        else:
+            behaviour_policy = BiasedRandom(0.5, 0, env.action_space.n, rng)
+            # behaviour_policy = ScriptedPolicy()
         target_policy = BiasedRandom(0.5, 0, env.action_space.n, rng)
-        # behaviour_policy = ScriptedPolicy()
         # target_policy = ScriptedPolicy()
         # target_policy = EpsGreedy(0, env.action_space.n, rng)  # Greedy policy
+
+    # True values for BiasedRandom(0.5, 0, ...) in gridworld
+    true_values = np.array([[0, 0.42290273, 0.00798559, -0.26424724, -0.39868317],
+                            [0.85637394, 0.40017918, 0.00475787, -0.26258757, -0.39366252],
+                            [0.73389499, 0.36524459, 0, -0.25110309, -0.36017762],
+                            [0.62960723, 0.32662237, 0.00152571, -0.19625266, -0.16237105],
+                            [0.55060987, 0.29507967, 0.02129253, -0.01420391, 0]])
+    true_rbar = -0.9825679270181953
 
     state_size = features.state_size
     action_size = env.action_space.n
