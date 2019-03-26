@@ -12,7 +12,7 @@ from policies import EpsGreedy, BiasedRandom, ScriptedPolicy
 def parse_args():
     # Training settings
     parser = argparse.ArgumentParser(description='Control variates for average reward')
-    parser.add_argument('--max-episodes', type=int, default=1000, metavar='N',
+    parser.add_argument('--max-episodes', type=int, default=200, metavar='N',
                         help='number of episodes to repeat (default: 200)')
     parser.add_argument('--environment', type=str, default='gridworld', metavar='E',
                         choices=['gridworld', 'mountain_car'],
