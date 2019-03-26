@@ -34,23 +34,23 @@ def parse_args():
                         help='Steps for n-step (default: 1)')
     parser.add_argument('--lambda', type=float, default=0, metavar='L', dest='lam',
                         help='lambda for lambda methods (default: 0)')
-    parser.add_argument('--off-policy', action='store_true', default=True,
-                        help='True if learning is off-policy (default: True)')
-    parser.add_argument('--cv', action='store_true', default=True,
-                        help='True if control variates are used (for off-policy) (default: True)')
+    parser.add_argument('--off-policy', action='store_true', default=False,
+                        help='True if learning is off-policy (default: False)')
+    parser.add_argument('--cv', action='store_true', default=False,
+                        help='True if control variates are used (default: False)')
     parser.add_argument('--full-rbar', action='store_true', default=False,
                         help='True if Rbar also uses n-step/lambda updates (default: False)')
-    parser.add_argument('--cv-rbar', action='store_true', default=True,
-                        help='True if Rbar uses control variates (default: True)')
+    parser.add_argument('--cv-rbar', action='store_true', default=False,
+                        help='True if Rbar uses control variates (default: False)')
 
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
     return parser.parse_args()
 
 
-def main():
+def run(config):
     args = parse_args()
-    print(args.full_rbar)
+    # experiment.log_parameters(vars(args))
     rng = np.random.RandomState(args.seed)
     # np.seterr(all='raise')
 
@@ -83,7 +83,7 @@ def main():
                             [0.85637394, 0.40017918, 0.00475787, -0.26258757, -0.39366252],
                             [0.73389499, 0.36524459, 0, -0.25110309, -0.36017762],
                             [0.62960723, 0.32662237, 0.00152571, -0.19625266, -0.16237105],
-                            [0.55060987, 0.29507967, 0.02129253, -0.01420391, 0]])
+                            [0.55060987, 0.29507967, 0.02129253, -0.01420391, 0]]).flatten()
     true_rbar = -0.9825679270181953
 
     state_size = features.state_size
@@ -143,12 +143,21 @@ def main():
         #     state = features.extract(obs)
         #     avg_reward -= reward
 
-        print("Episode: {}, Weights: {}, Rbar: {}".format(e, alg.weights.reshape((5, 5)), alg.rbar))
-        # print("Episode: {}, Reward: {}, Actions: {} Rbar: {}".format(e, avg_reward,
-        #                                                              alg.weights.argmax(axis=1).reshape((5, 5)),
-        #                                                              alg.rbar))
+        if args.environment == 'gridworld':
+            print("Episode: {}, Weights: {}, Rbar: {}".format(e, alg.weights.reshape((5, 5)), alg.rbar))
+            # print("Episode: {}, Reward: {}, Actions: {} Rbar: {}".format(e, avg_reward,
+            #                                                              alg.weights.argmax(axis=1).reshape((5, 5)),
+            #                                                              alg.rbar))
         # print("Episode: {}, Reward: {}, Rbar: {}".format(e, avg_reward, alg.rbar))
+
+    values = alg.weights - alg.weights[12]  # Since true value of initial state is set to zero
+    rmse = np.sqrt(np.mean(np.square(values - true_values)))
+    rmse_rbar = np.abs(alg.rbar - true_rbar)
+
+    metrics = {'rmse': rmse, 'rmse_rbar': rmse_rbar}
+    # experiment.log_metrics(metrics)
 
 
 if __name__ == '__main__':
-    main()
+    args = parse_args()
+    run(vars(args))
