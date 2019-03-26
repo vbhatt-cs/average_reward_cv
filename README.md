@@ -12,16 +12,18 @@ Extension of De Asis, Kristopher, and Richard S. Sutton. "Per-decision Multi-ste
 * Install [anaconda with python 3](https://www.anaconda.com/distribution/).
 * Create a conda environment and activate it
  ```
- $ conda env create -f requirements.yml
+ $ conda env create -f requirements.yaml
  $ conda activate average_reward_cv
  ```
 
 ## Running
 * After conda environment is activated, run `python main.py`.
 * Run `python main.py --help` for documentation about optional parameters.
+* To run all experiments, run `python run_experiments.py`
 
 ## Files
-* _main.py_ - Main script to run the experiments
+* _run_experiments.py_ - File to run the experiments and log results
+* _main.py_ - Main script to run the algorithms
 * _gridworld.py_ - Class for grid world environment
 * _algs.py_ - Implementation of algorithms
 * _features.py_ - Feature extraction classes
@@ -46,7 +48,8 @@ Extension of De Asis, Kristopher, and Richard S. Sutton. "Per-decision Multi-ste
         - [x] Lambda control
         - [x] Add a testing phase to test off-policy control
     - [x] CV
-- [ ] Integrate MLFlow for running experiments
+- [x] Set up experiment pipeline
+- [ ] Set up plotting pipeline
 - [ ] Plot graphs
     - [ ] Prediction (on-policy)
         - [ ] RMS Error with n-step

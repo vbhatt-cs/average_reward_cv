@@ -49,27 +49,25 @@ def parse_args():
 
 
 def run(config):
-    args = parse_args()
-    # experiment.log_parameters(vars(args))
-    rng = np.random.RandomState(args.seed)
+    rng = np.random.RandomState(config['seed'])
     # np.seterr(all='raise')
 
-    if args.environment == 'mountain_car':
+    if config['environment'] == 'mountain_car':
         env = gym.make('MountainCar-v0')
-        env.seed(args.seed)
+        env.seed(config['seed'])
         env._max_episode_steps = 1000
         features = TileCoding(np.array([8, 8]), 16)
 
         # Scale alpha, beta with n_tilings
-        args.alpha = args.alpha / 16
-        args.beta = args.beta / 16
+        config['alpha'] = config['alpha'] / 16
+        config['beta'] = config['beta'] / 16
 
         behaviour_policy = EpsGreedy(0.1, env.action_space.n, rng)
         target_policy = EpsGreedy(0, env.action_space.n, rng)  # Greedy policy
     else:  # Grid world
         env = GridWorld()
         features = OneHot(25)
-        if args.off_policy:
+        if config['off_policy']:
             behaviour_policy = EpsGreedy(1, env.action_space.n, rng)  # Equiprobable random
         else:
             behaviour_policy = BiasedRandom(0.5, 0, env.action_space.n, rng)
@@ -89,28 +87,34 @@ def run(config):
     state_size = features.state_size
     action_size = env.action_space.n
 
-    if args.algorithm == 'r-learning':
-        alg = RLearning(behaviour_policy, args.alpha, args.beta, state_size, action_size)
-    elif args.algorithm == 'n-step':
-        if args.environment == 'gridworld':  # Prediction
-            alg = NStepPrediction(behaviour_policy, target_policy, args.alpha, args.beta, args.off_policy,
-                                  args.cv, args.full_rbar, args.cv_rbar, args.n, state_size)
-            # alg = NStepControl(behaviour_policy, target_policy, args.alpha, args.beta, args.off_policy,
-            #                    args.cv, args.full_rbar, args.cv_rbar, args.n, state_size, action_size)
+    if config['algorithm'] == 'r-learning':
+        alg = RLearning(behaviour_policy, config['alpha'], config['beta'], state_size, action_size)
+    elif config['algorithm'] == 'n-step':
+        if config['environment'] == 'gridworld':  # Prediction
+            alg = NStepPrediction(behaviour_policy, target_policy, config['alpha'], config['beta'],
+                                  config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
+                                  config['n'], state_size)
+            # alg = NStepControl(behaviour_policy, target_policy, config['alpha'], config['beta'],
+            #                    config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
+            #                    config['n'], state_size, action_size)
         else:  # Control
-            alg = NStepControl(behaviour_policy, target_policy, args.alpha, args.beta, args.off_policy,
-                               args.cv, args.full_rbar, args.cv_rbar, args.n, state_size, action_size)
+            alg = NStepControl(behaviour_policy, target_policy, config['alpha'], config['beta'],
+                               config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
+                               config['n'], state_size, action_size)
     else:  # Lambda
-        if args.environment == 'gridworld':  # Prediction
-            alg = LambdaPrediction(behaviour_policy, target_policy, args.alpha, args.beta, args.off_policy,
-                                   args.cv, args.full_rbar, args.cv_rbar, args.lam, state_size)
-            # alg = LambdaControl(behaviour_policy, target_policy, args.alpha, args.beta, args.off_policy,
-            #                     args.cv, args.full_rbar, args.cv_rbar, args.lam, state_size, action_size)
+        if config['environment'] == 'gridworld':  # Prediction
+            alg = LambdaPrediction(behaviour_policy, target_policy, config['alpha'], config['beta'],
+                                   config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
+                                   config['lam'], state_size)
+            # alg = LambdaControl(behaviour_policy, target_policy, config['alpha'], config['beta'],
+            #                     config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
+            #                     config['lam'], state_size, action_size)
         else:  # Control
-            alg = LambdaControl(behaviour_policy, target_policy, args.alpha, args.beta, args.off_policy,
-                                args.cv, args.full_rbar, args.cv_rbar, args.lam, state_size, action_size)
+            alg = LambdaControl(behaviour_policy, target_policy, config['alpha'], config['beta'],
+                                config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
+                                config['lam'], state_size, action_size)
 
-    for e in range(args.max_episodes):
+    for e in range(config['max_episodes']):
         obs = env.reset()
         state = features.extract(obs)
         if e == 0:
@@ -143,19 +147,24 @@ def run(config):
         #     state = features.extract(obs)
         #     avg_reward -= reward
 
-        if args.environment == 'gridworld':
+        if config['environment'] == 'gridworld':
             print("Episode: {}, Weights: {}, Rbar: {}".format(e, alg.weights.reshape((5, 5)), alg.rbar))
             # print("Episode: {}, Reward: {}, Actions: {} Rbar: {}".format(e, avg_reward,
             #                                                              alg.weights.argmax(axis=1).reshape((5, 5)),
             #                                                              alg.rbar))
-        # print("Episode: {}, Reward: {}, Rbar: {}".format(e, avg_reward, alg.rbar))
+        else:
+            print("Episode: {}, Reward: {}, Rbar: {}".format(e, avg_reward, alg.rbar))
 
-    values = alg.weights - alg.weights[12]  # Since true value of initial state is set to zero
-    rmse = np.sqrt(np.mean(np.square(values - true_values)))
-    rmse_rbar = np.abs(alg.rbar - true_rbar)
+    if config['environment'] == 'gridworld':
+        values = alg.weights - alg.weights[12]  # Since true value of initial state is set to zero
+        rmse = np.sqrt(np.mean(np.square(values - true_values)))
+        rmse_rbar = np.abs(alg.rbar - true_rbar)
 
-    metrics = {'rmse': rmse, 'rmse_rbar': rmse_rbar}
-    # experiment.log_metrics(metrics)
+        metrics = {'rmse': rmse, 'rmse_rbar': rmse_rbar}
+    else:
+        metrics = None
+
+    return metrics
 
 
 if __name__ == '__main__':

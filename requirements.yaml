@@ -3,5 +3,6 @@ dependencies:
   - python=3.6
   - numpy=1.16.2
   - matplotlib=3.0.3
+  - pandas=0.24.1
   - pip:
     - gym==0.12.0
