@@ -12,7 +12,7 @@ from policies import EpsGreedy, BiasedRandom, ScriptedPolicy
 def parse_args():
     # Training settings
     parser = argparse.ArgumentParser(description='Control variates for average reward')
-    parser.add_argument('--max-episodes', type=int, default=200, metavar='N',
+    parser.add_argument('--max-episodes', type=int, default=1000, metavar='N',
                         help='number of episodes to repeat (default: 200)')
     parser.add_argument('--environment', type=str, default='gridworld', metavar='E',
                         choices=['gridworld', 'mountain_car'],
@@ -32,13 +32,13 @@ def parse_args():
                         help='learning rate for Rbar (default: 0.1)')
     parser.add_argument('--n', type=int, default=1, metavar='N',
                         help='Steps for n-step (default: 1)')
-    parser.add_argument('--lambda', type=float, default=0, metavar='L', dest='lam',
+    parser.add_argument('--lambda', type=float, default=0, metavar='L',
                         help='lambda for lambda methods (default: 0)')
     parser.add_argument('--off-policy', action='store_true', default=False,
                         help='True if learning is off-policy (default: False)')
     parser.add_argument('--cv', action='store_true', default=False,
                         help='True if control variates are used (default: False)')
-    parser.add_argument('--full-rbar', action='store_true', default=False,
+    parser.add_argument('--full-rbar', action='store_true', default=True,
                         help='True if Rbar also uses n-step/lambda updates (default: False)')
     parser.add_argument('--cv-rbar', action='store_true', default=False,
                         help='True if Rbar uses control variates (default: False)')
@@ -105,14 +105,14 @@ def run(config):
         if config['environment'] == 'gridworld':  # Prediction
             alg = LambdaPrediction(behaviour_policy, target_policy, config['alpha'], config['beta'],
                                    config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
-                                   config['lam'], state_size)
+                                   config['lambda'], state_size)
             # alg = LambdaControl(behaviour_policy, target_policy, config['alpha'], config['beta'],
             #                     config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
-            #                     config['lam'], state_size, action_size)
+            #                     config['lambda'], state_size, action_size)
         else:  # Control
             alg = LambdaControl(behaviour_policy, target_policy, config['alpha'], config['beta'],
                                 config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
-                                config['lam'], state_size, action_size)
+                                config['lambda'], state_size, action_size)
 
     for e in range(config['max_episodes']):
         obs = env.reset()
@@ -148,12 +148,14 @@ def run(config):
         #     avg_reward -= reward
 
         if config['environment'] == 'gridworld':
-            print("Episode: {}, Weights: {}, Rbar: {}".format(e, alg.weights.reshape((5, 5)), alg.rbar))
+            # print("Episode: {}, Weights: {}, Rbar: {}".format(e, alg.weights.reshape((5, 5)), alg.rbar))
             # print("Episode: {}, Reward: {}, Actions: {} Rbar: {}".format(e, avg_reward,
             #                                                              alg.weights.argmax(axis=1).reshape((5, 5)),
             #                                                              alg.rbar))
+            pass
         else:
-            print("Episode: {}, Reward: {}, Rbar: {}".format(e, avg_reward, alg.rbar))
+            # print("Episode: {}, Reward: {}, Rbar: {}".format(e, avg_reward, alg.rbar))
+            pass
 
     if config['environment'] == 'gridworld':
         values = alg.weights - alg.weights[12]  # Since true value of initial state is set to zero

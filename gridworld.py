@@ -1,6 +1,6 @@
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from gym.spaces import Discrete
-from matplotlib.table import Table
+# from matplotlib.table import Table
 
 
 class GridWorld:
@@ -17,20 +17,20 @@ class GridWorld:
         self.action_space = Discrete(4)
         self.t = 0
 
-        # Rendering init
-        fig, ax = plt.subplots()
-        ax.set_axis_off()
-        self.grid = Table(ax, bbox=[0, 0, 1, 1])
-        width, height = 1.0 / self.size, 1.0 / self.size
-
-        # Add cells
-        for i in range(self.size):
-            for j in range(self.size):
-                color = 'black' if (i, j) in self.goal_states else 'white'
-                val = 'O' if self.state == (i, j) else ''
-                self.grid.add_cell(i, j, width, height, text=val, loc='center', facecolor=color)
-
-        ax.add_table(self.grid)
+        # # Rendering init
+        # fig, ax = plt.subplots()
+        # ax.set_axis_off()
+        # self.grid = Table(ax, bbox=[0, 0, 1, 1])
+        # width, height = 1.0 / self.size, 1.0 / self.size
+        #
+        # # Add cells
+        # for i in range(self.size):
+        #     for j in range(self.size):
+        #         color = 'black' if (i, j) in self.goal_states else 'white'
+        #         val = 'O' if self.state == (i, j) else ''
+        #         self.grid.add_cell(i, j, width, height, text=val, loc='center', facecolor=color)
+        #
+        # ax.add_table(self.grid)
 
     def reset(self):
         """
@@ -42,15 +42,15 @@ class GridWorld:
         self.t = 0
         return self.state
 
-    def render(self):
-        """
-        Render the environment for visualization
-        Adapted from https://github.com/ShangtongZhang/reinforcement-learning-an-introduction/blob/master/chapter04/grid_world.py
-        """
-        self.grid.get_celld()[self.prev_state].get_text().set_text('')
-        self.grid.get_celld()[self.state].get_text().set_text('O')
-        plt.pause(0.1)
-        plt.draw()
+    # def render(self):
+    #     """
+    #     Render the environment for visualization
+    #     Adapted from https://github.com/ShangtongZhang/reinforcement-learning-an-introduction/blob/master/chapter04/grid_world.py
+    #     """
+    #     self.grid.get_celld()[self.prev_state].get_text().set_text('')
+    #     self.grid.get_celld()[self.state].get_text().set_text('O')
+    #     plt.pause(0.1)
+    #     plt.draw()
 
     def step(self, action):
         """
