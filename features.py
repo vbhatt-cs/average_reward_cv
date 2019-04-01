@@ -52,17 +52,20 @@ class TileCoding(BaseFeature):
     """
     Wrapper class for tile coding
     """
-    def __init__(self, n_tiles, n_tilings):
+    def __init__(self, n_tiles, n_tilings, limits):
         """
         Args:
             n_tiles (list or 1D array): Number of tiles in each dimension
             n_tilings (int): Number of tilings
+            limits (list): List of (min, max) tuples for each dimension
         """
         super().__init__()
         self.n_tiles = np.array(n_tiles)
         self.n_tilings = n_tilings
         self.state_size = n_tilings * np.prod(self.n_tiles)
         self.iht = IHT(self.state_size)
+        self.limits = np.array(limits)
+        self.scaling = self.n_tiles / (self.limits[:, 1] - self.limits[:, 0])
 
     def extract(self, obs):
         """
@@ -73,7 +76,8 @@ class TileCoding(BaseFeature):
         Returns:
             Vector with all zeros except the list of indices set to 1
         """
+        obs = np.array(obs)
         state = np.zeros(self.state_size)
-        idx = tiles(self.iht, self.n_tilings, obs)
+        idx = tiles(self.iht, self.n_tilings, (obs - self.limits[:, 0]) * self.scaling)
         state[idx] = 1
         return state

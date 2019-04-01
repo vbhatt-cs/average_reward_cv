@@ -1,18 +1,22 @@
 import argparse
+import os
 
-import gym
 import numpy as np
 
 from algs import RLearning, NStepPrediction, NStepControl, LambdaPrediction, LambdaControl
 from features import TileCoding, OneHot
-from gridworld import GridWorld
-from policies import EpsGreedy, BiasedRandom, ScriptedPolicy
+from gridworld import GridWorld, MountainCar
+from policies import EpsGreedy, BiasedRandom
+
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
 
 
 def parse_args():
     # Training settings
     parser = argparse.ArgumentParser(description='Control variates for average reward')
-    parser.add_argument('--max-episodes', type=int, default=1000, metavar='N',
+    parser.add_argument('--max-episodes', type=int, default=200, metavar='N',
                         help='number of episodes to repeat (default: 200)')
     parser.add_argument('--environment', type=str, default='gridworld', metavar='E',
                         choices=['gridworld', 'mountain_car'],
@@ -53,10 +57,11 @@ def run(config):
     # np.seterr(all='raise')
 
     if config['environment'] == 'mountain_car':
-        env = gym.make('MountainCar-v0')
-        env.seed(config['seed'])
-        env._max_episode_steps = 1000
-        features = TileCoding(np.array([8, 8]), 16)
+        # env = gym.make('MountainCar-v0')
+        # env.seed(config['seed'])
+        # env._max_episode_steps = 1000
+        env = MountainCar(rng)
+        features = TileCoding(np.array([8, 8]), 16, [[-1.2, 0.6], [-0.07, 0.07]])
 
         # Scale alpha, beta with n_tilings
         config['alpha'] = config['alpha'] / 16
@@ -131,22 +136,6 @@ def run(config):
             alg.train(reward, state)
             avg_reward += reward
 
-        # # print(action_count / sum(action_count))
-        # print(avg_reward)
-        #
-        # # Testing
-        # # avg_reward = 0
-        # # action_count = np.zeros(action_size)
-        # obs = env.reset()
-        # state = features.extract(obs)
-        # done = False
-        # while not done:
-        #     action = alg.act(state, True)
-        #     # action_count[action] += 1
-        #     obs, reward, done, _ = env.step(action)
-        #     state = features.extract(obs)
-        #     avg_reward -= reward
-
         if config['environment'] == 'gridworld':
             # print("Episode: {}, Weights: {}, Rbar: {}".format(e, alg.weights.reshape((5, 5)), alg.rbar))
             # print("Episode: {}, Reward: {}, Actions: {} Rbar: {}".format(e, avg_reward,
@@ -164,7 +153,20 @@ def run(config):
 
         metrics = {'rmse': rmse, 'rmse_rbar': rmse_rbar}
     else:
-        metrics = None
+        # Testing
+        avg_reward = 0
+        for e in range(10):
+            # action_count = np.zeros(action_size)
+            obs = env.reset()
+            state = features.extract(obs)
+            done = False
+            while not done:
+                action = alg.act(state, True)
+                # action_count[action] += 1
+                obs, reward, done, _ = env.step(action)
+                state = features.extract(obs)
+                avg_reward += reward
+        metrics = {'reward': avg_reward / 10}
 
     return metrics
 

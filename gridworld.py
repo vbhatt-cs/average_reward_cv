@@ -1,5 +1,6 @@
 # import matplotlib.pyplot as plt
 from gym.spaces import Discrete
+import numpy as np
 # from matplotlib.table import Table
 
 
@@ -90,6 +91,70 @@ class GridWorld:
             self.state = (2, 2)  # Since in continuing case env is reset and it doesn't matter in episodic case
 
         return self.state, reward, done, None  # No info returned (kept to make it consistent with gym)
+
+
+class MountainCar:
+    """
+    Mountain car environment
+    """
+    def __init__(self, rng):
+        """
+        Args:
+            rng: Random state
+        """
+        self.rng = rng
+        self.position = self.rng.uniform(-0.6, -0.4)
+        self.velocity = 0.0
+        self.velocity_limit = [-0.07, 0.07]
+        self.position_limit = [-1.2, 0.6]
+        self.action_space = Discrete(3)
+        self.t = 0
+
+    def reset(self):
+        """
+        Reset the environment and return the starting state
+        Returns:
+            Starting state
+        """
+        self.position = self.rng.uniform(-0.6, -0.4)
+        self.velocity = 0.0
+        self.t = 0
+        return [self.position, self.velocity]
+
+    def step(self, action):
+        """
+        Advance the environment by one step. Adapted from https://github.com/ShangtongZhang/
+        reinforcement-learning-an-introduction/blob/master/chapter10/mountain_car.py
+        Args:
+            action (int): Action to take
+
+        Returns:
+            next state, reward, if the episode is done, None
+        """
+        done = False
+        action -= 1  # Since action is 0, 1 or 2 but the equations assume -1, 0, 1
+        new_velocity = self.velocity + 0.001 * action - 0.0025 * np.cos(3 * self.position)
+        new_velocity = min(max(self.velocity_limit[0], new_velocity), self.velocity_limit[1])
+        new_position = self.position + new_velocity
+        new_position = min(max(self.position_limit[0], new_position), self.position_limit[1])
+        reward = -1.0
+        if new_position == self.position_limit[0]:
+            new_velocity = 0.0
+
+        self.position = new_position
+        self.velocity = new_velocity
+
+        if new_position == self.position_limit[1]:
+            done = True
+            reward = 0.0
+            self.reset()
+
+        self.t += 1
+        if self.t == 1000:
+            done = True
+            self.reset()
+
+        return [self.position, self.velocity], reward, done, None
 
 
 def test_gridworld():
