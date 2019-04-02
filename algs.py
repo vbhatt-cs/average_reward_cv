@@ -411,18 +411,20 @@ class NStepControl(BaseAlg):
         rho = self.target_policy.prob(next_state, next_action, self.weights) / prob
         self.rho_history.append(rho)
 
+        q_history = np.array(self.s_history).dot(self.weights)
+        ev_history = self.target_policy.expected_value(q_history)
         # s_history[-1] = s_(tau+n), s_history[0] = s_tau, r_history[0] = r_(tau+1), rho_history[0] = rho_(tau+1)
         if len(self.r_history) == self.n:
-            g = self.s_history[-1].dot(self.weights)[self.a_history[-1]]
-            g_cv = self.s_history[-1].dot(self.weights)[self.a_history[-1]]
+            g = q_history[-1][self.a_history[-1]]
+            g_cv = q_history[-1][self.a_history[-1]]
             for i in range(1, self.n + 1):
                 g = self.r_history[-i] - self.rbar + self.rho_history[-i] * g
-                expected_v = self.target_policy.expected_value(self.s_history[-i], self.weights)
+                expected_v = ev_history[-i]
                 g_cv = self.r_history[-i] - self.rbar + self.rho_history[-i] * (
-                        g_cv - self.s_history[-i].dot(self.weights)[self.a_history[-i]]) + expected_v
+                        g_cv - q_history[-i][self.a_history[-i]]) + expected_v
 
-            delta_cv = g_cv - self.s_history[0].dot(self.weights)[self.a_history[0]]
-            delta = g - self.s_history[0].dot(self.weights)[self.a_history[0]]
+            delta_cv = g_cv - q_history[0][self.a_history[0]]
+            delta = g - q_history[0][self.a_history[0]]
 
             if self.full_rbar:
                 if self.cv_rbar:
@@ -431,13 +433,11 @@ class NStepControl(BaseAlg):
                     self.rbar += self.beta * delta
             else:
                 if self.cv_rbar:
-                    expected_v = self.target_policy.expected_value(self.s_history[1], self.weights)
-                    delta_one_step = self.r_history[0] - self.rbar + expected_v - \
-                                     self.s_history[0].dot(self.weights)[self.a_history[0]]
+                    expected_v = ev_history[1]
+                    delta_one_step = self.r_history[0] - self.rbar + expected_v - q_history[0][self.a_history[0]]
                 else:
                     delta_one_step = self.r_history[0] - self.rbar + self.rho_history[0] * \
-                                     self.s_history[1].dot(self.weights)[self.a_history[1]] - \
-                                     self.s_history[0].dot(self.weights)[self.a_history[0]]
+                                     q_history[1][self.a_history[1]] - q_history[0][self.a_history[0]]
                 self.rbar += self.beta * delta_one_step
 
             if self.cv:
@@ -518,10 +518,11 @@ class LambdaControl(BaseAlg):
         # rho = rho_(t+1), self.rho = rho_t
         rho = self.target_policy.prob(next_state, next_action, self.weights) / prob
 
-        expected_v = self.target_policy.expected_value(next_state, self.weights)
-        delta_cv = reward - self.rbar + expected_v - self.state.dot(self.weights)[self.action]
-        delta = reward - self.rbar + rho * next_state.dot(self.weights)[next_action] - self.state.dot(self.weights)[
-            self.action]
+        q = self.state.dot(self.weights)
+        next_q = next_state.dot(self.weights)
+        expected_v = self.target_policy.expected_value(next_q)
+        delta_cv = reward - self.rbar + expected_v - q[self.action]
+        delta = reward - self.rbar + rho * next_q[next_action] - q[self.action]
         self.z = self.lam * self.rho * self.z
         self.z[:, self.action] += self.state
         if self.full_rbar:

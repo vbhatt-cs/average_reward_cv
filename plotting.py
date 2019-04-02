@@ -1,6 +1,6 @@
 import pandas as pd
 
-exp = 1554092048
-path = 'Experiments/lambda_cv_prediction/{}/results.csv'.format(exp)
+exp = 1554221367
+path = 'Experiments/lambda_on_policy_control/{}/results.csv'.format(exp)
 df = pd.read_csv(path)
-df_sorted = df.sort_values('rmse')
+df_sorted = df.sort_values('reward', ascending=False)

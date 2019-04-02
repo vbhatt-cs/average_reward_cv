@@ -37,12 +37,11 @@ class BasePolicy:
         """
         raise NotImplementedError
 
-    def expected_value(self, state, weights):
+    def expected_value(self, q):
         """
         Calculate the expected Q value
         Args:
-            state (1D array): Current state
-            weights (array): Current weights
+            q (1D array): Q values
         """
         raise NotImplementedError
 
@@ -128,19 +127,19 @@ class EpsGreedy(BasePolicy):
         else:
             return action, self.eps / self.action_size
 
-    def expected_value(self, state, weights):
+    def expected_value(self, q):
         """
         Calculate the expected Q value
         Args:
-            state (1D array): Current state
-            weights (array): Current weights
+            q (1D array): Q values
 
         Returns:
             Expected Q value
         """
-        q = state.dot(weights)
-        probs = self.probs(state, weights)
-        return probs.dot(q)
+        axis = 0 if len(q.shape) == 1 else 1
+        ev = q.sum(axis=axis) * self.eps
+        ev += q.max(axis=axis) * (1 - self.eps)
+        return ev
 
     def probs(self, state, weights):
         """
@@ -226,19 +225,19 @@ class BiasedRandom(BasePolicy):
         else:
             return action, self.eps / self.action_size
 
-    def expected_value(self, state, weights):
+    def expected_value(self, q):
         """
         Calculate the expected Q value
         Args:
-            state (1D array): Current state
-            weights (array): Current weights
+            q (1D array): Q values
 
         Returns:
             Expected Q value
         """
-        q = state.dot(weights)
-        probs = self.probs(state, weights)
-        return probs.dot(q)
+        axis = 0 if len(q.shape) == 1 else 1
+        ev = q.sum(axis=axis) * self.eps
+        ev += np.take(q, self.bias_action, axis=axis) * (1 - self.eps)
+        return ev
 
     def probs(self, state, weights):
         """

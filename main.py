@@ -42,7 +42,7 @@ def parse_args():
                         help='True if learning is off-policy (default: False)')
     parser.add_argument('--cv', action='store_true', default=False,
                         help='True if control variates are used (default: False)')
-    parser.add_argument('--full-rbar', action='store_true', default=True,
+    parser.add_argument('--full-rbar', action='store_true', default=False,
                         help='True if Rbar also uses n-step/lambda updates (default: False)')
     parser.add_argument('--cv-rbar', action='store_true', default=False,
                         help='True if Rbar uses control variates (default: False)')
@@ -67,7 +67,7 @@ def run(config):
         config['alpha'] = config['alpha'] / 16
         config['beta'] = config['beta'] / 16
 
-        behaviour_policy = EpsGreedy(0.1, env.action_space.n, rng)
+        behaviour_policy = EpsGreedy(0.3, env.action_space.n, rng)
         target_policy = EpsGreedy(0, env.action_space.n, rng)  # Greedy policy
     else:  # Grid world
         env = GridWorld()
@@ -119,13 +119,16 @@ def run(config):
                                 config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
                                 config['lambda'], state_size, action_size)
 
+    avg_reward = 0
     for e in range(config['max_episodes']):
         obs = env.reset()
         state = features.extract(obs)
         if e == 0:
             alg.reset(state)
         done = False
-        avg_reward = 0
+        # Accumulate the rewards in last 10 episodes
+        if e == config['max_episodes'] - 10:
+            avg_reward = 0
         # action_count = np.zeros(action_size)
         while not done:
             # env.render()
@@ -153,19 +156,6 @@ def run(config):
 
         metrics = {'rmse': rmse, 'rmse_rbar': rmse_rbar}
     else:
-        # Testing
-        avg_reward = 0
-        for e in range(10):
-            # action_count = np.zeros(action_size)
-            obs = env.reset()
-            state = features.extract(obs)
-            done = False
-            while not done:
-                action = alg.act(state, True)
-                # action_count[action] += 1
-                obs, reward, done, _ = env.step(action)
-                state = features.extract(obs)
-                avg_reward += reward
         metrics = {'reward': avg_reward / 10}
 
     return metrics
