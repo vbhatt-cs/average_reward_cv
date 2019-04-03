@@ -63,10 +63,6 @@ def run(config):
         env = MountainCar(rng)
         features = TileCoding(np.array([8, 8]), 16, [[-1.2, 0.6], [-0.07, 0.07]])
 
-        # Scale alpha, beta with n_tilings
-        config['alpha'] = config['alpha'] / 16
-        config['beta'] = config['beta'] / 16
-
         behaviour_policy = EpsGreedy(0.3, env.action_space.n, rng)
         target_policy = EpsGreedy(0, env.action_space.n, rng)  # Greedy policy
     else:  # Grid world
@@ -103,7 +99,7 @@ def run(config):
             #                    config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
             #                    config['n'], state_size, action_size)
         else:  # Control
-            alg = NStepControl(behaviour_policy, target_policy, config['alpha'], config['beta'],
+            alg = NStepControl(behaviour_policy, target_policy, config['alpha'] / 16, config['beta'] / 16,
                                config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
                                config['n'], state_size, action_size)
     else:  # Lambda
@@ -115,7 +111,7 @@ def run(config):
             #                     config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
             #                     config['lambda'], state_size, action_size)
         else:  # Control
-            alg = LambdaControl(behaviour_policy, target_policy, config['alpha'], config['beta'],
+            alg = LambdaControl(behaviour_policy, target_policy, config['alpha'] / 16, config['beta'] / 16,
                                 config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
                                 config['lambda'], state_size, action_size)
 
