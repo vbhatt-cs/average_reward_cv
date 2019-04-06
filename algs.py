@@ -9,13 +9,14 @@ class BaseAlg:
     """
 
     # Policy is fixed for prediction, function of Q value for control
-    def __init__(self, behaviour_policy, target_policy, alpha, beta, off_policy, cv, full_rbar, cv_rbar):
+    def __init__(self, behaviour_policy, target_policy, alpha, beta, init_rbar, off_policy, cv, full_rbar, cv_rbar):
         """
         Args:
             behaviour_policy (BasePolicy): Policy to follow to generate experience. Should take state, weights as args
             target_policy (BasePolicy): Policy to learn about. Should take state, weights as args
             alpha (float): Learning rate for weights
             beta (float): Learning rate for average reward
+            init_rbar (float): Initial value of rbar
             off_policy (bool): If learning is off-policy
             cv (bool): If control variates should be used
             full_rbar (bool): If update for average reward should use n-step/lambda method instead of one step TD error
@@ -23,7 +24,7 @@ class BaseAlg:
         """
         self.behaviour_policy = behaviour_policy
         self.target_policy = target_policy if off_policy else behaviour_policy
-        self.rbar = 0
+        self.rbar = init_rbar
         self.alpha = alpha
         self.beta = beta
         self.weights = None
@@ -74,12 +75,13 @@ class RLearning:
     rewards." Proceedings of the tenth international conference on machine learning. Vol. 298. 1993.
     """
 
-    def __init__(self, behaviour_policy, alpha, beta, state_size, action_size):
+    def __init__(self, behaviour_policy, alpha, beta, init_rbar, state_size, action_size):
         """
         Args:
             behaviour_policy (BasePolicy): Policy to follow to generate experience. Should take state, weights as args
             alpha (float): Learning rate for weights
             beta (float): Learning rate for average reward
+            init_rbar (float): Initial value of rbar
             state_size (int): Length of state feature vector
             action_size (int): Size of action space
         """
@@ -87,7 +89,7 @@ class RLearning:
         self.alpha = alpha
         self.beta = beta
         self.weights = np.zeros((state_size, action_size))
-        self.rbar = 0
+        self.rbar = init_rbar
 
         self.state = None
         self.action = None
@@ -143,13 +145,15 @@ class NStepPrediction(BaseAlg):
     N-step TD
     """
 
-    def __init__(self, behaviour_policy, target_policy, alpha, beta, off_policy, cv, full_rbar, cv_rbar, n, state_size):
+    def __init__(self, behaviour_policy, target_policy, alpha, beta, init_rbar, off_policy, cv, full_rbar, cv_rbar, n,
+                 state_size):
         """
         Args:
             behaviour_policy (BasePolicy): Policy to follow to generate experience. Should take state, weights as args
             target_policy (BasePolicy): Policy to learn about. Should take state, weights as args
             alpha (float): Learning rate for weights
             beta (float): Learning rate for average reward
+            init_rbar (float): Initial value of rbar
             off_policy (bool): If learning is off-policy
             cv (bool): If control variates should be used
             full_rbar (bool): If update for average reward should use n-step/lambda method instead of one step TD error
@@ -157,7 +161,7 @@ class NStepPrediction(BaseAlg):
             n (int): Number of time steps before updating
             state_size (int): Length of state feature vector
         """
-        super().__init__(behaviour_policy, target_policy, alpha, beta, off_policy, cv, full_rbar, cv_rbar)
+        super().__init__(behaviour_policy, target_policy, alpha, beta, init_rbar, off_policy, cv, full_rbar, cv_rbar)
         self.weights = np.zeros(state_size)
         self.n = n
         self.r_history = deque(maxlen=n)
@@ -245,7 +249,7 @@ class LambdaPrediction(BaseAlg):
     TD(lambda)
     """
 
-    def __init__(self, behaviour_policy, target_policy, alpha, beta, off_policy, cv, full_rbar, cv_rbar, lam,
+    def __init__(self, behaviour_policy, target_policy, alpha, beta, init_rbar, off_policy, cv, full_rbar, cv_rbar, lam,
                  state_size):
         """
         Args:
@@ -253,6 +257,7 @@ class LambdaPrediction(BaseAlg):
             target_policy (BasePolicy): Policy to learn about. Should take state, weights as args
             alpha (float): Learning rate for weights
             beta (float): Learning rate for average reward
+            init_rbar (float): Initial value of rbar
             off_policy (bool): If learning is off-policy
             cv (bool): If control variates should be used
             full_rbar (bool): If update for average reward should use n-step/lambda method instead of one step TD error
@@ -260,7 +265,7 @@ class LambdaPrediction(BaseAlg):
             lam (float): Lambda
             state_size (int): Length of state feature vector
         """
-        super().__init__(behaviour_policy, target_policy, alpha, beta, off_policy, cv, full_rbar, cv_rbar)
+        super().__init__(behaviour_policy, target_policy, alpha, beta, init_rbar, off_policy, cv, full_rbar, cv_rbar)
         self.weights = np.zeros(state_size)
         self.lam = lam
         self.z = np.zeros_like(self.weights)
@@ -340,14 +345,15 @@ class NStepControl(BaseAlg):
     N-step SARSA / expected SARSA
     """
 
-    def __init__(self, behaviour_policy, target_policy, alpha, beta, off_policy, cv, full_rbar, cv_rbar, n, state_size,
-                 action_size):
+    def __init__(self, behaviour_policy, target_policy, alpha, beta, init_rbar, off_policy, cv, full_rbar, cv_rbar, n,
+                 state_size, action_size):
         """
         Args:
             behaviour_policy (BasePolicy): Policy to follow to generate experience. Should take state, weights as args
             target_policy (BasePolicy): Policy to learn about. Should take state, weights as args
             alpha (float): Learning rate for weights
             beta (float): Learning rate for average reward
+            init_rbar (float): Initial value of rbar
             off_policy (bool): If learning is off-policy
             cv (bool): If control variates should be used
             full_rbar (bool): If update for average reward should use n-step/lambda method instead of one step TD error
@@ -356,7 +362,7 @@ class NStepControl(BaseAlg):
             state_size (int): Length of state feature vector
             action_size (int): Size of action space
         """
-        super().__init__(behaviour_policy, target_policy, alpha, beta, off_policy, cv, full_rbar, cv_rbar)
+        super().__init__(behaviour_policy, target_policy, alpha, beta, init_rbar, off_policy, cv, full_rbar, cv_rbar)
         self.weights = np.zeros((state_size, action_size))
         self.n = n
         self.r_history = deque(maxlen=n)
@@ -451,7 +457,7 @@ class LambdaControl(BaseAlg):
     SARSA(lambda)
     """
 
-    def __init__(self, behaviour_policy, target_policy, alpha, beta, off_policy, cv, full_rbar, cv_rbar, lam,
+    def __init__(self, behaviour_policy, target_policy, alpha, beta, init_rbar, off_policy, cv, full_rbar, cv_rbar, lam,
                  state_size, action_size):
         """
         Args:
@@ -459,6 +465,7 @@ class LambdaControl(BaseAlg):
             target_policy (BasePolicy): Policy to learn about. Should take state, weights as args
             alpha (float): Learning rate for weights
             beta (float): Learning rate for average reward
+            init_rbar (float): Initial value of rbar
             off_policy (bool): If learning is off-policy
             cv (bool): If control variates should be used
             full_rbar (bool): If update for average reward should use n-step/lambda method instead of one step TD error
@@ -467,7 +474,7 @@ class LambdaControl(BaseAlg):
             state_size (int): Length of state feature vector
             action_size (int): Size of action space
         """
-        super().__init__(behaviour_policy, target_policy, alpha, beta, off_policy, cv, full_rbar, cv_rbar)
+        super().__init__(behaviour_policy, target_policy, alpha, beta, init_rbar, off_policy, cv, full_rbar, cv_rbar)
         self.weights = np.zeros((state_size, action_size))
         self.lam = lam
         self.z = np.zeros_like(self.weights)

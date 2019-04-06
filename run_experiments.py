@@ -8,11 +8,12 @@ import pandas as pd
 
 import main
 
-default_args = {'max_episodes': 200,
+default_args = {'max_t': 20000,
                 'environment': 'gridworld',
                 'algorithm': 'n-step',
                 'alpha': 0.1,
                 'beta': 0.1,
+                'init_rbar': 1 / 50,
                 'n': 1,
                 'lam': 0,
                 'off_policy': False,
@@ -25,29 +26,31 @@ experiments_path = 'Experiments/'
 
 
 def run_ab(config):
-    n_cols = 6 if config['environment'] == 'gridworld' else 4
-    seeds = 30
-    n_exp = 6 * 6
+    n_cols = 7 if config['environment'] == 'gridworld' else 5
+    seeds = 5
+    n_exp = 7 * 9 * 3
     results = np.zeros((n_exp, n_cols))
     i = 0
-    for a in range(4, 10):
-        alpha = 2 ** (-a)
-        for b in range(5, 11):
-            beta = 2 ** (-b)
-            config['alpha'] = alpha
-            config['beta'] = beta
-            print('Running', [alpha, beta])
-            metrics_list = run_seeds(config, seeds)
+    for ir in [0.01, 0.1, 1]:
+        for a in range(1, 8):
+            alpha = 2 ** (-a)
+            for b in range(1, 10):
+                beta = 2 ** (-b)
+                config['alpha'] = alpha
+                config['beta'] = beta
+                config['init_rbar'] = ir
+                print('Running', [ir, alpha, beta])
+                metrics_list = run_seeds(config, seeds)
 
-            metrics_df = pd.DataFrame(metrics_list)
-            mean = metrics_df.mean()
-            sem = metrics_df.sem()
+                metrics_df = pd.DataFrame(metrics_list)
+                mean = metrics_df.mean()
+                sem = metrics_df.sem()
 
-            if config['environment'] == 'gridworld':
-                results[i] = [alpha, beta, mean['rmse'], sem['rmse'], mean['rmse_rbar'], sem['rmse_rbar']]
-            else:
-                results[i] = [alpha, beta, mean['reward'], sem['reward']]
-            i += 1
+                if config['environment'] == 'gridworld':
+                    results[i] = [ir, alpha, beta, mean['rmse'], sem['rmse'], mean['rmse_rbar'], sem['rmse_rbar']]
+                else:
+                    results[i] = [ir, alpha, beta, mean['reward'], sem['reward']]
+                i += 1
     return results
 
 
@@ -65,13 +68,13 @@ def n_step_on_policy_prediction(full_rbar):
     os.makedirs(path, exist_ok=True)
 
     config = default_args.copy()
-    config['max_episodes'] = 1000
+    config['max_t'] = 1000
     config['full_rbar'] = full_rbar
 
     with open(path + 'config.json', 'w') as f:
         json.dump(config, f)
 
-    column_list = ['n', 'alpha', 'beta', 'rmse', 'sem_rmse', 'rmse_rbar', 'sem_rmse_rbar']
+    column_list = ['n', 'init_rbar', 'alpha', 'beta', 'rmse', 'sem_rmse', 'rmse_rbar', 'sem_rmse_rbar']
     ns = [1, 2, 4, 8]
     configs = [config.copy() for _ in range(4)]
     for i in range(4):
@@ -92,14 +95,14 @@ def lambda_on_policy_prediction(full_rbar):
     os.makedirs(path, exist_ok=True)
 
     config = default_args.copy()
-    config['max_episodes'] = 1000
+    config['max_t'] = 1000
     config['algorithm'] = 'lambda'
     config['full_rbar'] = full_rbar
 
     with open(path + 'config.json', 'w') as f:
         json.dump(config, f)
 
-    column_list = ['lambda', 'alpha', 'beta', 'rmse', 'sem_rmse', 'rmse_rbar', 'sem_rmse_rbar']
+    column_list = ['lambda', 'init_rbar', 'alpha', 'beta', 'rmse', 'sem_rmse', 'rmse_rbar', 'sem_rmse_rbar']
     lams = [1 - 2 ** (-l) for l in range(4)]
     configs = [config.copy() for _ in range(4)]
     for i in range(4):
@@ -120,14 +123,14 @@ def n_step_off_policy_prediction(full_rbar):
     os.makedirs(path, exist_ok=True)
 
     config = default_args.copy()
-    config['max_episodes'] = 1000
+    config['max_t'] = 1000
     config['off_policy'] = True
     config['full_rbar'] = full_rbar
 
     with open(path + 'config.json', 'w') as f:
         json.dump(config, f)
 
-    column_list = ['n', 'alpha', 'beta', 'rmse', 'sem_rmse', 'rmse_rbar', 'sem_rmse_rbar']
+    column_list = ['n', 'init_rbar', 'alpha', 'beta', 'rmse', 'sem_rmse', 'rmse_rbar', 'sem_rmse_rbar']
     ns = [1, 2, 4, 8]
     configs = [config.copy() for _ in range(4)]
     for i in range(4):
@@ -148,7 +151,7 @@ def lambda_off_policy_prediction(full_rbar):
     os.makedirs(path, exist_ok=True)
 
     config = default_args.copy()
-    config['max_episodes'] = 1000
+    config['max_t'] = 1000
     config['algorithm'] = 'lambda'
     config['off_policy'] = True
     config['full_rbar'] = full_rbar
@@ -156,7 +159,7 @@ def lambda_off_policy_prediction(full_rbar):
     with open(path + 'config.json', 'w') as f:
         json.dump(config, f)
 
-    column_list = ['lambda', 'alpha', 'beta', 'rmse', 'sem_rmse', 'rmse_rbar', 'sem_rmse_rbar']
+    column_list = ['lambda', 'init_rbar', 'alpha', 'beta', 'rmse', 'sem_rmse', 'rmse_rbar', 'sem_rmse_rbar']
     lams = [1 - 2 ** (-l) for l in range(4)]
     configs = [config.copy() for _ in range(4)]
     for i in range(4):
@@ -177,7 +180,7 @@ def n_step_cv_prediction(full_rbar, cv_rbar):
     os.makedirs(path, exist_ok=True)
 
     config = default_args.copy()
-    config['max_episodes'] = 1000
+    config['max_t'] = 1000
     config['off_policy'] = True
     config['cv'] = True
     config['full_rbar'] = full_rbar
@@ -186,7 +189,7 @@ def n_step_cv_prediction(full_rbar, cv_rbar):
     with open(path + 'config.json', 'w') as f:
         json.dump(config, f)
 
-    column_list = ['n', 'alpha', 'beta', 'rmse', 'sem_rmse', 'rmse_rbar', 'sem_rmse_rbar']
+    column_list = ['n', 'init_rbar', 'alpha', 'beta', 'rmse', 'sem_rmse', 'rmse_rbar', 'sem_rmse_rbar']
     ns = [1, 2, 4, 8]
     configs = [config.copy() for _ in range(4)]
     for i in range(4):
@@ -207,7 +210,7 @@ def lambda_cv_prediction(full_rbar, cv_rbar):
     os.makedirs(path, exist_ok=True)
 
     config = default_args.copy()
-    config['max_episodes'] = 1000
+    config['max_t'] = 1000
     config['algorithm'] = 'lambda'
     config['off_policy'] = True
     config['cv'] = True
@@ -217,7 +220,7 @@ def lambda_cv_prediction(full_rbar, cv_rbar):
     with open(path + 'config.json', 'w') as f:
         json.dump(config, f)
 
-    column_list = ['lambda', 'alpha', 'beta', 'rmse', 'sem_rmse', 'rmse_rbar', 'sem_rmse_rbar']
+    column_list = ['lambda', 'init_rbar', 'alpha', 'beta', 'rmse', 'sem_rmse', 'rmse_rbar', 'sem_rmse_rbar']
     lams = [1 - 2 ** (-l) for l in range(4)]
     configs = [config.copy() for _ in range(4)]
     for i in range(4):
@@ -244,7 +247,7 @@ def n_step_on_policy_control(full_rbar):
     with open(path + 'config.json', 'w') as f:
         json.dump(config, f)
 
-    column_list = ['n', 'alpha', 'beta', 'reward', 'sem_reward']
+    column_list = ['n', 'init_rbar', 'alpha', 'beta', 'reward', 'sem_reward']
     ns = [1, 2, 4]
     configs = [config.copy() for _ in range(len(ns))]
     for i in range(len(ns)):
@@ -272,7 +275,7 @@ def lambda_on_policy_control(full_rbar):
     with open(path + 'config.json', 'w') as f:
         json.dump(config, f)
 
-    column_list = ['lambda', 'alpha', 'beta', 'reward', 'sem_reward']
+    column_list = ['lambda', 'init_rbar', 'alpha', 'beta', 'reward', 'sem_reward']
     lams = [1 - 2 ** (-l) for l in range(3)]
     configs = [config.copy() for _ in range(len(lams))]
     for i in range(len(lams)):
@@ -300,7 +303,7 @@ def n_step_off_policy_control(full_rbar):
     with open(path + 'config.json', 'w') as f:
         json.dump(config, f)
 
-    column_list = ['n', 'alpha', 'beta', 'reward', 'sem_reward']
+    column_list = ['n', 'init_rbar', 'alpha', 'beta', 'reward', 'sem_reward']
     ns = [1, 2, 4]
     configs = [config.copy() for _ in range(len(ns))]
     for i in range(len(ns)):
@@ -329,7 +332,7 @@ def lambda_off_policy_control(full_rbar):
     with open(path + 'config.json', 'w') as f:
         json.dump(config, f)
 
-    column_list = ['lambda', 'alpha', 'beta', 'reward', 'sem_reward']
+    column_list = ['lambda', 'init_rbar', 'alpha', 'beta', 'reward', 'sem_reward']
     lams = [1 - 2 ** (-l) for l in range(3)]
     configs = [config.copy() for _ in range(len(lams))]
     for i in range(len(lams)):
@@ -359,7 +362,7 @@ def n_step_cv_control(full_rbar, cv_rbar):
     with open(path + 'config.json', 'w') as f:
         json.dump(config, f)
 
-    column_list = ['n', 'alpha', 'beta', 'reward', 'sem_reward']
+    column_list = ['n', 'init_rbar', 'alpha', 'beta', 'reward', 'sem_reward']
     ns = [1, 2, 4]
     configs = [config.copy() for _ in range(len(ns))]
     for i in range(len(ns)):
@@ -390,7 +393,7 @@ def lambda_cv_control(full_rbar, cv_rbar):
     with open(path + 'config.json', 'w') as f:
         json.dump(config, f)
 
-    column_list = ['lambda', 'alpha', 'beta', 'reward', 'sem_reward']
+    column_list = ['lambda', 'init_rbar', 'alpha', 'beta', 'reward', 'sem_reward']
     lams = [1 - 2 ** (-l) for l in range(3)]
     configs = [config.copy() for _ in range(len(lams))]
     for i in range(len(lams)):

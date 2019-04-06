@@ -77,18 +77,18 @@ class GridWorld:
         self.state = (x, y)
 
         if self.state in self.goal_states:
-            reward = 0
+            reward = 1
             done = True
             self.state = (2, 2)  # Since in continuing case env is reset and it doesn't matter in episodic case
         else:
-            reward = -1
+            reward = 0
             done = False
 
         self.t += 1
-        if self.t == 1000:
-            reward = -1
-            done = True
-            self.state = (2, 2)  # Since in continuing case env is reset and it doesn't matter in episodic case
+        # if self.t == 1000:
+        #     reward = -1
+        #     done = True
+        #     self.state = (2, 2)  # Since in continuing case env is reset and it doesn't matter in episodic case
 
         return self.state, reward, done, None  # No info returned (kept to make it consistent with gym)
 
@@ -137,7 +137,7 @@ class MountainCar:
         new_velocity = min(max(self.velocity_limit[0], new_velocity), self.velocity_limit[1])
         new_position = self.position + new_velocity
         new_position = min(max(self.position_limit[0], new_position), self.position_limit[1])
-        reward = -1.0
+        reward = 0
         if new_position == self.position_limit[0]:
             new_velocity = 0.0
 
@@ -146,13 +146,13 @@ class MountainCar:
 
         if new_position == self.position_limit[1]:
             done = True
-            reward = 0.0
+            reward = 1.0
             self.reset()
 
         self.t += 1
-        if self.t == 1000:
-            done = True
-            self.reset()
+        # if self.t == 1000:
+        #     done = True
+        #     self.reset()
 
         return [self.position, self.velocity], reward, done, None
 
@@ -177,7 +177,7 @@ def test_gridworld():
     for act, true_state in zip(acts, true_states):
         obs, reward, done, _ = env.step(act)
         assert obs == env.state == true_state
-        assert reward == -1
+        assert reward == 0
         assert not done
 
     # Test goal states, transitions on edges
@@ -185,12 +185,12 @@ def test_gridworld():
     acts = [2, 2, 2, 0, 0, 0, 0, 0, 2, 2, 1, 1, 1, 3, 3, 3, 3, 3, 0]
     for act in acts:
         obs, reward, done, _ = env.step(act)
-        assert reward == -1
+        assert reward == 0
         assert not done
 
     obs, reward, done, _ = env.step(0)
     assert obs == env.state == (2, 2)
-    assert reward == 0
+    assert reward == 1
     assert done
 
     env.reset()
@@ -198,7 +198,7 @@ def test_gridworld():
     for act in acts:
         obs, reward, done, _ = env.step(act)
     assert obs == env.state == (2, 2)
-    assert reward == 0
+    assert reward == 1
     assert done
 
 

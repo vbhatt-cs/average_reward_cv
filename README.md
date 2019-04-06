@@ -24,7 +24,7 @@ Extension of De Asis, Kristopher, and Richard S. Sutton. "Per-decision Multi-ste
 ## Files
 * _run_experiments.py_ - File to run the experiments and log results
 * _main.py_ - Main script to run the algorithms
-* _gridworld.py_ - Class for grid world environment
+* _envs.py_ - Implementation of environments
 * _algs.py_ - Implementation of algorithms
 * _features.py_ - Feature extraction classes
 * _policies.py_ - Implementation of policies
@@ -50,20 +50,21 @@ Extension of De Asis, Kristopher, and Richard S. Sutton. "Per-decision Multi-ste
     - [x] CV
 - [x] Set up experiment pipeline
 - [ ] Set up plotting pipeline
-- [ ] Plot graphs
-    - [ ] Prediction (on-policy)
-        - [ ] RMS Error with n-step
-        - [ ] RMS Error with lambda
-        - [ ] RMS Error with full rbar or one step rbar
-    - [ ] Prediction (off-policy)
-        - [ ] RMS Error with n-step
-        - [ ] RMS Error with lambda
-        - [ ] RMS Error with full rbar or one step rbar
-    - [ ] Prediction (cv)
-        - [ ] RMS Error with n-step
-        - [ ] RMS Error with lambda
-        - [ ] RMS Error with full rbar or one step rbar
-        - [ ] RMS Error without cv for rbar    
-    - [ ] Control
-        - [ ] Reward vs episodes for cv and no cv
-        - [ ] Fully off-policy (like random behaviour, test with greedy?)
+- [x] Plot graphs
+    - [x] Prediction (on-policy)
+        - [x] RMS Error with n-step
+        - [x] RMS Error with lambda
+        - [x] RMS Error with full rbar or one step rbar
+    - [x] Prediction (off-policy)
+        - [x] RMS Error with n-step
+        - [x] RMS Error with lambda
+        - [x] RMS Error with full rbar or one step rbar
+    - [x] Prediction (cv)
+        - [x] RMS Error with n-step
+        - [x] RMS Error with lambda
+        - [x] RMS Error with full rbar or one step rbar
+        - [x] RMS Error without cv for rbar    
+    - [x] Control
+        - [x] Reward vs episodes for cv and no cv
+        - [x] Fully off-policy (like random behaviour, test with greedy?)
+- [ ] Random walk env

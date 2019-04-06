@@ -5,7 +5,7 @@ This code is specific to the environment setting used in this project.
 import numpy as np
 
 from features import OneHot
-from gridworld import GridWorld
+from envs import GridWorld
 from policies import BiasedRandom, ScriptedPolicy
 
 env = GridWorld()

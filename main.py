@@ -2,10 +2,12 @@ import argparse
 import os
 
 import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 from algs import RLearning, NStepPrediction, NStepControl, LambdaPrediction, LambdaControl
 from features import TileCoding, OneHot
-from gridworld import GridWorld, MountainCar
+from envs import GridWorld, MountainCar
 from policies import EpsGreedy, BiasedRandom
 
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -16,8 +18,8 @@ os.environ["OMP_NUM_THREADS"] = "1"
 def parse_args():
     # Training settings
     parser = argparse.ArgumentParser(description='Control variates for average reward')
-    parser.add_argument('--max-episodes', type=int, default=200, metavar='N',
-                        help='number of episodes to repeat (default: 200)')
+    parser.add_argument('--max-t', type=int, default=20000, metavar='N',
+                        help='number of episodes to repeat (default: 20000)')
     parser.add_argument('--environment', type=str, default='gridworld', metavar='E',
                         choices=['gridworld', 'mountain_car'],
                         help="environment to use:\n"
@@ -34,6 +36,8 @@ def parse_args():
                         help='learning rate for Q/V (default: 0.1)')
     parser.add_argument('--beta', type=float, default=0.1, metavar='LR',
                         help='learning rate for Rbar (default: 0.1)')
+    parser.add_argument('--init-rbar', type=float, default=0.1, metavar='LR',
+                        help='initial value for Rbar (default: 0.1)')
     parser.add_argument('--n', type=int, default=1, metavar='N',
                         help='Steps for n-step (default: 1)')
     parser.add_argument('--lambda', type=float, default=0, metavar='L',
@@ -83,48 +87,50 @@ def run(config):
                             [0.73389499, 0.36524459, 0, -0.25110309, -0.36017762],
                             [0.62960723, 0.32662237, 0.00152571, -0.19625266, -0.16237105],
                             [0.55060987, 0.29507967, 0.02129253, -0.01420391, 0]]).flatten()
-    true_rbar = -0.9825679270181953
+    true_rbar = 0.01743207298180489
 
     state_size = features.state_size
     action_size = env.action_space.n
 
     if config['algorithm'] == 'r-learning':
-        alg = RLearning(behaviour_policy, config['alpha'], config['beta'], state_size, action_size)
+        alg = RLearning(behaviour_policy, config['alpha'], config['beta'], config['init_rbar'], state_size, action_size)
     elif config['algorithm'] == 'n-step':
         if config['environment'] == 'gridworld':  # Prediction
-            alg = NStepPrediction(behaviour_policy, target_policy, config['alpha'], config['beta'],
+            alg = NStepPrediction(behaviour_policy, target_policy, config['alpha'], config['beta'], config['init_rbar'],
                                   config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
                                   config['n'], state_size)
-            # alg = NStepControl(behaviour_policy, target_policy, config['alpha'], config['beta'],
+            # alg = NStepControl(behaviour_policy, target_policy, config['alpha'], config['beta'], config['init_rbar'],
             #                    config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
             #                    config['n'], state_size, action_size)
         else:  # Control
             alg = NStepControl(behaviour_policy, target_policy, config['alpha'] / 16, config['beta'] / 16,
-                               config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
-                               config['n'], state_size, action_size)
+                               config['init_rbar'], config['off_policy'], config['cv'], config['full_rbar'],
+                               config['cv_rbar'], config['n'], state_size, action_size)
     else:  # Lambda
         if config['environment'] == 'gridworld':  # Prediction
             alg = LambdaPrediction(behaviour_policy, target_policy, config['alpha'], config['beta'],
-                                   config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
-                                   config['lambda'], state_size)
+                                   config['init_rbar'], config['off_policy'], config['cv'], config['full_rbar'],
+                                   config['cv_rbar'], config['lambda'], state_size)
             # alg = LambdaControl(behaviour_policy, target_policy, config['alpha'], config['beta'],
-            #                     config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
-            #                     config['lambda'], state_size, action_size)
+            #                     config['init_rbar'], config['off_policy'], config['cv'], config['full_rbar'],
+            #                     config['cv_rbar'], config['lambda'], state_size, action_size)
         else:  # Control
             alg = LambdaControl(behaviour_policy, target_policy, config['alpha'] / 16, config['beta'] / 16,
-                                config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
-                                config['lambda'], state_size, action_size)
+                                config['init_rbar'], config['off_policy'], config['cv'], config['full_rbar'],
+                                config['cv_rbar'], config['lambda'], state_size, action_size)
 
-    avg_reward = 0
-    for e in range(config['max_episodes']):
+    tot_reward = 0
+    tot_t = 0
+    e = 0
+    while tot_t < config['max_t']:
         obs = env.reset()
         state = features.extract(obs)
-        if e == 0:
+        if tot_t == 0:
             alg.reset(state)
         done = False
         # Accumulate the rewards in last 10 episodes
-        if e == config['max_episodes'] - 10:
-            avg_reward = 0
+        # if e == config['max_episodes'] - 10:
+        #     avg_reward = 0
         # action_count = np.zeros(action_size)
         while not done:
             # env.render()
@@ -133,7 +139,18 @@ def run(config):
             obs, reward, done, _ = env.step(action)
             state = features.extract(obs)
             alg.train(reward, state)
-            avg_reward += reward
+            if tot_t > 0 * config['max_t']:
+                tot_reward += reward
+            tot_t += 1
+            if tot_t == config['max_t']:
+                break
+
+        # ep_reward = 0
+        # while not done:
+        #     action = alg.act(state)
+        #     obs, reward, done, _ = env.step(action)
+        #     state = features.extract(obs)
+        #     ep_reward += reward
 
         if config['environment'] == 'gridworld':
             # print("Episode: {}, Weights: {}, Rbar: {}".format(e, alg.weights.reshape((5, 5)), alg.rbar))
@@ -142,8 +159,10 @@ def run(config):
             #                                                              alg.rbar))
             pass
         else:
-            # print("Episode: {}, Reward: {}, Rbar: {}".format(e, avg_reward, alg.rbar))
+            # print("Episode: {}, Reward: {}, Rbar: {}".format(e, tot_reward, alg.rbar))
             pass
+
+        e += 1
 
     if config['environment'] == 'gridworld':
         values = alg.weights - alg.weights[12]  # Since true value of initial state is set to zero
@@ -152,7 +171,18 @@ def run(config):
 
         metrics = {'rmse': rmse, 'rmse_rbar': rmse_rbar}
     else:
-        metrics = {'reward': avg_reward / 10}
+        # xs, ys = np.meshgrid(np.linspace(-1.2, 0.6, 20), np.linspace(-0.07, 0.07, 20))
+        # qs = np.zeros((len(xs), len(ys)))
+        # for _i in range(len(xs)):
+        #     for _j in range(len(ys)):
+        #         state = features.extract([xs[_i, _j], ys[_i, _j]])
+        #         qs[_i, _j] = state.dot(alg.weights).max()
+        #
+        # fig = plt.figure()
+        # ax = fig.add_subplot(111, projection='3d')
+        # ax.plot_surface(xs, ys, qs)
+        # plt.show()
+        metrics = {'reward': tot_t / (tot_reward + 1)}
 
     return metrics
 
