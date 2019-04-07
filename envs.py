@@ -102,7 +102,10 @@ class MountainCar:
         Args:
             rng: Random state
         """
-        self.rng = rng
+        if rng is None:
+            self.rng = np.random.RandomState()
+        else:
+            self.rng = rng
         self.position = self.rng.uniform(-0.6, -0.4)
         self.velocity = 0.0
         self.velocity_limit = [-0.07, 0.07]
@@ -155,6 +158,69 @@ class MountainCar:
         #     self.reset()
 
         return [self.position, self.velocity], reward, done, None
+
+
+class RandomWalk:
+    """
+    Environment for random walk. Set behaviour policy to equiprobable random for random walk.
+    Moving to right end puts the agent back in middle with a +1 reward. Similar for left end but with -1 reward.
+    """
+
+    def __init__(self, n_states):
+        """
+        Args:
+            n_states (int): Number of states
+        """
+        self.n_states = n_states
+        self.position = int(n_states / 2)
+        self.action_space = Discrete(2)
+        self.t = 0
+
+    def reset(self):
+        """
+        Reset the environment and return the starting state
+        Returns:
+            Starting state
+        """
+        self.position = int(self.n_states / 2)
+        self.t = 0
+        state = np.zeros(self.n_states)
+        state[self.position] = 1
+        return state
+
+    def step(self, action):
+        """
+        Advance the environment by one step. Adapted from https://github.com/ShangtongZhang/
+        reinforcement-learning-an-introduction/blob/master/chapter10/mountain_car.py
+        Args:
+            action (int): Action to take
+
+        Returns:
+            next state, reward, if the episode is done, None
+        """
+        done = False
+        action = action * 2 - 1  # Make the action +-1 from 0, 1
+        self.position += action
+        reward = 0
+        if self.position == -1:
+            reward = -1
+            done = True
+            self.reset()
+
+        if self.position == self.n_states:
+            reward = 1
+            done = True
+            self.reset()
+
+        state = np.zeros(self.n_states)
+        state[self.position] = 1
+
+        self.t += 1
+        # if self.t == 1000:
+        #     done = True
+        #     self.reset()
+
+        return state, reward, done, None
 
 
 def test_gridworld():
@@ -214,3 +280,43 @@ def test_gridworld_render():
     for act in acts:
         env.render()
         env.step(act)
+
+
+def test_randomwalk():
+    rw = RandomWalk(5)
+
+    actions = [1, 1, 1]
+    true_pos = [3, 4, 2]
+
+    obs = rw.reset()
+    assert rw.position == int(np.where(obs == 1)[0]) == 2
+
+    i = 0
+    for i in range(len(actions) - 1):
+        obs, reward, done, _ = rw.step(actions[i])
+        assert rw.position == int(np.where(obs == 1)[0]) == true_pos[i]
+        assert reward == 0
+        assert not done
+
+    i += 1
+    obs, reward, done, _ = rw.step(actions[i])
+    assert rw.position == int(np.where(obs == 1)[0]) == true_pos[i]
+    assert reward == 1
+    assert done
+
+    actions = [0, 0, 0]
+    true_pos = [1, 0, 2]
+
+    rw.reset()
+    i = 0
+    for i in range(len(actions) - 1):
+        obs, reward, done, _ = rw.step(actions[i])
+        assert rw.position == int(np.where(obs == 1)[0]) == true_pos[i]
+        assert reward == 0
+        assert not done
+
+    i += 1
+    obs, reward, done, _ = rw.step(actions[i])
+    assert rw.position == int(np.where(obs == 1)[0]) == true_pos[i]
+    assert reward == -1
+    assert done

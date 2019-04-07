@@ -67,4 +67,7 @@ Extension of De Asis, Kristopher, and Richard S. Sutton. "Per-decision Multi-ste
     - [x] Control
         - [x] Reward vs episodes for cv and no cv
         - [x] Fully off-policy (like random behaviour, test with greedy?)
-- [ ] Random walk env
+- [x] Random walk env
+- [ ] Random walk experiments
+    - [ ] One step vs multi-step (with different init_rbar)
+    - [ ] Full rbar vs one step rbar

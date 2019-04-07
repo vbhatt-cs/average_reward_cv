@@ -17,7 +17,7 @@ class BaseFeature:
         """
         Extract state from observation
         """
-        return NotImplementedError
+        return obs
 
 
 class OneHot(BaseFeature):
