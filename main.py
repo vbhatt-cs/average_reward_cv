@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 from algs import RLearning, NStepPrediction, NStepControl, LambdaPrediction, LambdaControl
-from features import TileCoding, OneHot
-from envs import GridWorld, MountainCar
+from features import TileCoding, OneHot, Identity
+from envs import GridWorld, MountainCar, RandomWalk
 from policies import EpsGreedy, BiasedRandom
 
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -69,6 +69,12 @@ def run(config):
 
         behaviour_policy = EpsGreedy(0.3, env.action_space.n, rng)
         target_policy = EpsGreedy(0, env.action_space.n, rng)  # Greedy policy
+    elif config['environment'] == 'random_walk':
+        rw_state_size = 19
+        env = RandomWalk(rw_state_size)
+        features = Identity(rw_state_size)
+        behaviour_policy = EpsGreedy(1, env.action_space.n, rng)  # Equiprobable random
+        target_policy = EpsGreedy(1, env.action_space.n, rng)
     else:  # Grid world
         env = GridWorld()
         features = OneHot(25)
@@ -81,13 +87,21 @@ def run(config):
         # target_policy = ScriptedPolicy()
         # target_policy = EpsGreedy(0, env.action_space.n, rng)  # Greedy policy
 
-    # True values for BiasedRandom(0.5, 0, ...) in gridworld
-    true_values = np.array([[0, 0.42290273, 0.00798559, -0.26424724, -0.39868317],
-                            [0.85637394, 0.40017918, 0.00475787, -0.26258757, -0.39366252],
-                            [0.73389499, 0.36524459, 0, -0.25110309, -0.36017762],
-                            [0.62960723, 0.32662237, 0.00152571, -0.19625266, -0.16237105],
-                            [0.55060987, 0.29507967, 0.02129253, -0.01420391, 0]]).flatten()
-    true_rbar = 0.01743207298180489
+    if config['environment'] == 'random_walk':
+        true_values = np.linspace(-1, 1, rw_state_size + 2)[1:-1]
+        true_rbar = 0
+        # true_values = np.array(
+        #     [-0.045, -0.08, -0.105, -0.12, -0.125, -0.12, -0.105, -0.08, -0.045, 0., 0.055, 0.12, 0.195, 0.28, 0.375,
+        #      0.48, 0.595, 0.72, 0.855])
+        # true_rbar = 0.005
+    else:  # Grid world
+        # True values for BiasedRandom(0.5, 0, ...) in gridworld
+        true_values = np.array([[0, 0.42290273, 0.00798559, -0.26424724, -0.39868317],
+                                [0.85637394, 0.40017918, 0.00475787, -0.26258757, -0.39366252],
+                                [0.73389499, 0.36524459, 0, -0.25110309, -0.36017762],
+                                [0.62960723, 0.32662237, 0.00152571, -0.19625266, -0.16237105],
+                                [0.55060987, 0.29507967, 0.02129253, -0.01420391, 0]]).flatten()
+        true_rbar = 0.01743207298180489
 
     state_size = features.state_size
     action_size = env.action_space.n
@@ -95,7 +109,7 @@ def run(config):
     if config['algorithm'] == 'r-learning':
         alg = RLearning(behaviour_policy, config['alpha'], config['beta'], config['init_rbar'], state_size, action_size)
     elif config['algorithm'] == 'n-step':
-        if config['environment'] == 'gridworld':  # Prediction
+        if config['environment'] in ['gridworld', 'random_walk']:  # Prediction
             alg = NStepPrediction(behaviour_policy, target_policy, config['alpha'], config['beta'], config['init_rbar'],
                                   config['off_policy'], config['cv'], config['full_rbar'], config['cv_rbar'],
                                   config['n'], state_size)
@@ -107,7 +121,7 @@ def run(config):
                                config['init_rbar'], config['off_policy'], config['cv'], config['full_rbar'],
                                config['cv_rbar'], config['n'], state_size, action_size)
     else:  # Lambda
-        if config['environment'] == 'gridworld':  # Prediction
+        if config['environment'] in ['gridworld', 'random_walk']:  # Prediction
             alg = LambdaPrediction(behaviour_policy, target_policy, config['alpha'], config['beta'],
                                    config['init_rbar'], config['off_policy'], config['cv'], config['full_rbar'],
                                    config['cv_rbar'], config['lambda'], state_size)
@@ -158,6 +172,9 @@ def run(config):
             #                                                              alg.weights.argmax(axis=1).reshape((5, 5)),
             #                                                              alg.rbar))
             pass
+        elif config['environment'] == 'random_walk':
+            # print("Episode: {}, Weights: {}, Rbar: {}".format(e, alg.weights, alg.rbar))
+            pass
         else:
             # print("Episode: {}, Reward: {}, Rbar: {}".format(e, tot_reward, alg.rbar))
             pass
@@ -166,6 +183,12 @@ def run(config):
 
     if config['environment'] == 'gridworld':
         values = alg.weights - alg.weights[12]  # Since true value of initial state is set to zero
+        rmse = np.sqrt(np.mean(np.square(values - true_values)))
+        rmse_rbar = np.abs(alg.rbar - true_rbar)
+
+        metrics = {'rmse': rmse, 'rmse_rbar': rmse_rbar}
+    elif config['environment'] == 'random_walk':
+        values = alg.weights - alg.weights[int(rw_state_size / 2)]  # Since true value of initial state is set to zero
         rmse = np.sqrt(np.mean(np.square(values - true_values)))
         rmse_rbar = np.abs(alg.rbar - true_rbar)
 

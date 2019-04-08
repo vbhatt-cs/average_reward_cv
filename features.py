@@ -17,6 +17,20 @@ class BaseFeature:
         """
         Extract state from observation
         """
+        raise NotImplementedError
+
+
+class Identity(BaseFeature):
+    """ Identity features. Return the observation as is."""
+    def __init__(self, state_size):
+        """
+        Args:
+            state_size (int): Number of states
+        """
+        super().__init__()
+        self.state_size = state_size
+
+    def extract(self, obs):
         return obs
 
 
