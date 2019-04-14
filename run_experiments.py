@@ -27,14 +27,14 @@ experiments_path = 'Experiments/'
 
 def run_ab(config):
     n_cols = 7 if config['environment'] in ['gridworld', 'random_walk'] else 5
-    seeds = 100
-    n_exp = 5 * 8 * 4
+    seeds = 30
+    n_exp = 7 * 9 * 3
     results = np.zeros((n_exp, n_cols))
     i = 0
-    for ir in [0, 0.01, 0.1, 1, 10]:
-        for a in range(6):
+    for ir in [0.01, 0.1, 1]:
+        for a in range(1, 8):
             alpha = 2 ** (-a)
-            for b in range(2, 10):
+            for b in range(1, 10):
                 beta = 2 ** (-b)
                 config['alpha'] = alpha
                 config['beta'] = beta
@@ -69,7 +69,7 @@ def n_step_on_policy_prediction(full_rbar):
 
     config = default_args.copy()
     config['max_t'] = 1000
-    config['environment'] = 'random_walk'
+    # config['environment'] = 'random_walk'
     config['full_rbar'] = full_rbar
 
     with open(path + 'config.json', 'w') as f:
@@ -97,7 +97,7 @@ def lambda_on_policy_prediction(full_rbar):
 
     config = default_args.copy()
     config['max_t'] = 1000
-    config['environment'] = 'random_walk'
+    # config['environment'] = 'random_walk'
     config['algorithm'] = 'lambda'
     config['full_rbar'] = full_rbar
 
@@ -412,14 +412,14 @@ def lambda_cv_control(full_rbar, cv_rbar):
 
 
 if __name__ == '__main__':
-    print('Experiment: n-step on policy')
-    n_step_on_policy_prediction(False)
-    print('Experiment: n-step on policy full_rbar')
-    n_step_on_policy_prediction(True)
-    print('Experiment: lambda on policy')
-    lambda_on_policy_prediction(False)
-    print('Experiment: lambda on policy full_rbar')
-    lambda_on_policy_prediction(True)
+    # print('Experiment: n-step on policy')
+    # n_step_on_policy_prediction(False)
+    # print('Experiment: n-step on policy full_rbar')
+    # n_step_on_policy_prediction(True)
+    # print('Experiment: lambda on policy')
+    # lambda_on_policy_prediction(False)
+    # print('Experiment: lambda on policy full_rbar')
+    # lambda_on_policy_prediction(True)
 
     # print('Experiment: n-step off policy')
     # n_step_off_policy_prediction(False)

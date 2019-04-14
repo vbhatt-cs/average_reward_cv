@@ -12,7 +12,7 @@ class GridWorld:
 
     def __init__(self):
         self.size = 5  # 5x5 grid
-        self.state = (2, 2)  # Position of the agent
+        self.state = (int(self.size / 2), int(self.size / 2))  # Position of the agent
         self.prev_state = self.state  # For efficient rendering
         self.goal_states = [(0, 0), (self.size - 1, self.size - 1)]  # Terminal states
         self.action_space = Discrete(4)
@@ -39,7 +39,7 @@ class GridWorld:
         Returns:
             Starting state
         """
-        self.state = (2, 2)  # Start at the center of the grid
+        self.state = (int(self.size / 2), int(self.size / 2))  # Start at the center of the grid
         self.t = 0
         return self.state
 
@@ -79,7 +79,7 @@ class GridWorld:
         if self.state in self.goal_states:
             reward = 1
             done = True
-            self.state = (2, 2)  # Since in continuing case env is reset and it doesn't matter in episodic case
+            self.reset()  # Since in continuing case env is reset and it doesn't matter in episodic case
         else:
             reward = 0
             done = False

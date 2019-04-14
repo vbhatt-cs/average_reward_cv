@@ -21,10 +21,11 @@ def parse_args():
     parser.add_argument('--max-t', type=int, default=20000, metavar='N',
                         help='number of episodes to repeat (default: 20000)')
     parser.add_argument('--environment', type=str, default='gridworld', metavar='E',
-                        choices=['gridworld', 'mountain_car'],
+                        choices=['gridworld', 'random_walk' 'mountain_car'],
                         help="environment to use:\n"
-                             "'gridworld' - GridWorld environment\n"
-                             "'mountain_car' - Mountain Car environment (default: 'gridworld')")
+                             "'gridworld' (default)\n"
+                             "'random_walk'\n"
+                             "'mountain_car'")
     parser.add_argument('--algorithm', type=str, default='n-step', metavar='A',
                         choices=['n-step', 'n-step', 'r-learning'],
                         help="algorithm to use:\n"
