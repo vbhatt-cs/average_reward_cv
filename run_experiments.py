@@ -27,7 +27,7 @@ experiments_path = 'Experiments/'
 
 def run_ab(config):
     n_cols = 7 if config['environment'] in ['gridworld', 'random_walk'] else 5
-    seeds = 30
+    seeds = 1000
     n_exp = 7 * 9 * 3
     results = np.zeros((n_exp, n_cols))
     i = 0
@@ -425,8 +425,10 @@ if __name__ == '__main__':
     # n_step_off_policy_prediction(False)
     # print('Experiment: n-step off policy full_rbar')
     # n_step_off_policy_prediction(True)
-    # print('Experiment: lambda off policy')
-    # lambda_off_policy_prediction(False)
+    print('Experiment: lambda off policy')
+    p0 = Process(target=lambda_off_policy_prediction, args=(False,))
+    p0.start()
+    time.sleep(2)
     # print('Experiment: lambda off policy full_rbar')
     # lambda_off_policy_prediction(True)
     #
@@ -438,15 +440,18 @@ if __name__ == '__main__':
     # n_step_cv_prediction(True, True)
     # print('Experiment: n-step cv cv_rbar')
     # n_step_cv_prediction(False, True)
-    #
-    # print('Experiment: lambda cv')
-    # lambda_cv_prediction(False, False)
+
+    print('Experiment: lambda cv')
+    p1 = Process(target=lambda_cv_prediction, args=(False, False))
+    p1.start()
+    time.sleep(2)
     # print('Experiment: lambda cv full_rbar')
     # lambda_cv_prediction(True, False)
     # print('Experiment: lambda cv full_rbar cv_rbar')
     # lambda_cv_prediction(True, True)
-    # print('Experiment: lambda cv cv_rbar')
-    # lambda_cv_prediction(False, True)
+    print('Experiment: lambda cv cv_rbar')
+    p2 = Process(target=lambda_cv_prediction, args=(False, True))
+    p2.start()
 
     # print('Experiment: n-step on policy')
     # p1 = Process(target=n_step_on_policy_control, args=(False,))
