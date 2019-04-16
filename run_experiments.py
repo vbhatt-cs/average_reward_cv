@@ -250,7 +250,7 @@ def n_step_on_policy_control(full_rbar):
         json.dump(config, f)
 
     column_list = ['n', 'init_rbar', 'alpha', 'beta', 'reward', 'sem_reward']
-    ns = [1, 2, 4]
+    ns = [1, 2, 4, 8]
     configs = [config.copy() for _ in range(len(ns))]
     for i in range(len(ns)):
         configs[i]['n'] = ns[i]
@@ -278,7 +278,7 @@ def lambda_on_policy_control(full_rbar):
         json.dump(config, f)
 
     column_list = ['lambda', 'init_rbar', 'alpha', 'beta', 'reward', 'sem_reward']
-    lams = [1 - 2 ** (-l) for l in range(3)]
+    lams = [1 - 2 ** (-l) for l in range(4)]
     configs = [config.copy() for _ in range(len(lams))]
     for i in range(len(lams)):
         configs[i]['lambda'] = lams[i]
@@ -306,7 +306,7 @@ def n_step_off_policy_control(full_rbar):
         json.dump(config, f)
 
     column_list = ['n', 'init_rbar', 'alpha', 'beta', 'reward', 'sem_reward']
-    ns = [1, 2, 4]
+    ns = [1, 2, 4, 8]
     configs = [config.copy() for _ in range(len(ns))]
     for i in range(len(ns)):
         configs[i]['n'] = ns[i]
@@ -335,7 +335,7 @@ def lambda_off_policy_control(full_rbar):
         json.dump(config, f)
 
     column_list = ['lambda', 'init_rbar', 'alpha', 'beta', 'reward', 'sem_reward']
-    lams = [1 - 2 ** (-l) for l in range(3)]
+    lams = [1 - 2 ** (-l) for l in range(4)]
     configs = [config.copy() for _ in range(len(lams))]
     for i in range(len(lams)):
         configs[i]['lambda'] = lams[i]
@@ -365,7 +365,7 @@ def n_step_cv_control(full_rbar, cv_rbar):
         json.dump(config, f)
 
     column_list = ['n', 'init_rbar', 'alpha', 'beta', 'reward', 'sem_reward']
-    ns = [1, 2, 4]
+    ns = [1, 2, 4, 8]
     configs = [config.copy() for _ in range(len(ns))]
     for i in range(len(ns)):
         configs[i]['n'] = ns[i]
@@ -396,7 +396,7 @@ def lambda_cv_control(full_rbar, cv_rbar):
         json.dump(config, f)
 
     column_list = ['lambda', 'init_rbar', 'alpha', 'beta', 'reward', 'sem_reward']
-    lams = [1 - 2 ** (-l) for l in range(3)]
+    lams = [1 - 2 ** (-l) for l in range(4)]
     configs = [config.copy() for _ in range(len(lams))]
     for i in range(len(lams)):
         configs[i]['lambda'] = lams[i]
@@ -471,8 +471,8 @@ if __name__ == '__main__':
     # p2 = Process(target=n_step_off_policy_control, args=(True,))
     # p2.start()
     # print('Experiment: lambda off policy')
-    # p1 = Process(target=lambda_off_policy_control, args=(False,))
-    # p1.start()
+    # p0 = Process(target=lambda_off_policy_control, args=(False,))
+    # p0.start()
     # time.sleep(2)
     # print('Experiment: lambda off policy full_rbar')
     # p2 = Process(target=lambda_off_policy_control, args=(True,))
