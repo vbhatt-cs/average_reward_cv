@@ -109,7 +109,7 @@ class MountainCar:
         self.position = self.rng.uniform(-0.6, -0.4)
         self.velocity = 0.0
         self.velocity_limit = [-0.07, 0.07]
-        self.position_limit = [-1.2, 0.6]
+        self.position_limit = [-1.2, 0.5]
         self.action_space = Discrete(3)
         self.t = 0
 
