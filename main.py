@@ -2,8 +2,6 @@ import argparse
 import os
 
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 from algs import RLearning, NStepPrediction, NStepControl, LambdaPrediction, LambdaControl
 from features import TileCoding, OneHot, Identity
@@ -58,13 +56,17 @@ def parse_args():
 
 
 def run(config):
+    """
+    Args:
+        config (dict): Dictionary containing all arguments added in parse_args() and their values
+
+    Returns:
+        Dictionary containing metrics corresponding to the experiment that is run
+    """
     rng = np.random.RandomState(config['seed'])
     # np.seterr(all='raise')
 
     if config['environment'] == 'mountain_car':
-        # env = gym.make('MountainCar-v0')
-        # env.seed(config['seed'])
-        # env._max_episode_steps = 1000
         env = MountainCar(rng)
         features = TileCoding(np.array([8, 8]), 16, [[-1.2, 0.6], [-0.07, 0.07]])
 
@@ -91,10 +93,6 @@ def run(config):
     if config['environment'] == 'random_walk':
         true_values = np.linspace(-1, 1, rw_state_size + 2)[1:-1]
         true_rbar = 0
-        # true_values = np.array(
-        #     [-0.045, -0.08, -0.105, -0.12, -0.125, -0.12, -0.105, -0.08, -0.045, 0., 0.055, 0.12, 0.195, 0.28, 0.375,
-        #      0.48, 0.595, 0.72, 0.855])
-        # true_rbar = 0.005
     else:  # Grid world
         # True values for BiasedRandom(0.5, 0, ...) in gridworld
         true_values = np.array([[0, 0.42290273, 0.00798559, -0.26424724, -0.39868317],
@@ -143,14 +141,9 @@ def run(config):
         if tot_t == 0:
             alg.reset(state)
         done = False
-        # Accumulate the rewards in last 10 episodes
-        # if e == config['max_episodes'] - 10:
-        #     avg_reward = 0
-        # action_count = np.zeros(action_size)
         while not done:
             # env.render()
             action = alg.act(state)
-            # action_count[action] += 1
             obs, reward, done, _ = env.step(action)
             state = features.extract(obs)
             alg.train(reward, state)
@@ -159,13 +152,6 @@ def run(config):
             tot_t += 1
             if tot_t == config['max_t']:
                 break
-
-        # ep_reward = 0
-        # while not done:
-        #     action = alg.act(state)
-        #     obs, reward, done, _ = env.step(action)
-        #     state = features.extract(obs)
-        #     ep_reward += reward
 
         if config['environment'] == 'gridworld':
             # print("Episode: {}, Weights: {}, Rbar: {}".format(e, alg.weights.reshape((5, 5)), alg.rbar))
@@ -195,17 +181,6 @@ def run(config):
 
         metrics = {'rmse': rmse, 'rmse_rbar': rmse_rbar}
     else:
-        # xs, ys = np.meshgrid(np.linspace(-1.2, 0.6, 20), np.linspace(-0.07, 0.07, 20))
-        # qs = np.zeros((len(xs), len(ys)))
-        # for _i in range(len(xs)):
-        #     for _j in range(len(ys)):
-        #         state = features.extract([xs[_i, _j], ys[_i, _j]])
-        #         qs[_i, _j] = state.dot(alg.weights).max()
-        #
-        # fig = plt.figure()
-        # ax = fig.add_subplot(111, projection='3d')
-        # ax.plot_surface(xs, ys, qs)
-        # plt.show()
         metrics = {'reward': tot_t / (tot_reward + 1)}
 
     return metrics
